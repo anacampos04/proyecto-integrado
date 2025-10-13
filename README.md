@@ -46,17 +46,15 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 
 **Tareas:**
 - [x] Repositorio en GitHub activo y compartido  
-- [ ] Creación de la aplicación  
-- [ ] Esquema de base de datos (Modelo ER)  
-- [ ] Documentación v1  
-- [ ] Diagrama de navegación entre pantallas  
-- [ ] Configuración de Firebase (Auth + Firestore)  
+- [x] Creación de la aplicación  
+- [X] Esquema de base de datos (Modelo ER)  
+- [X] Documentación v1 
 
 **Entrega quincenal:**  
-- ✅ Repositorio inicial  
-- ✅ Diagrama ER  
-- ✅ Navegación entre pantallas  
-- ✅ Firebase conectado  
+- ✅ Repositorio inicial
+- ✅ Diagrama de casos de uso
+- ✅ Diagrama ER 
+- ✅ Diagrama de clases
 
 ---
 
@@ -64,6 +62,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **🎯 Objetivo:** Autenticación y primer flujo de contenido  
 
 **Tareas:**
+- [ ] Configuración de Firebase (Auth + Firestore)
 - [ ] Creación de pantallas de inicio de sesión y registro  
 - [ ] Guardado de datos de usuario en Firestore  
 - [ ] Obtener contenido de la API  
