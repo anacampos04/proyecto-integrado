@@ -15,7 +15,8 @@
   - [📅 Quincena 2 (14 - 27 octubre)](#-quincena-2-14---27-octubre)  
   - [📅 Quincena 3 (28 octubre - 10 noviembre)](#-quincena-3-28-octubre---10-noviembre)  
   - [📅 Quincena 4 (11 - 24 noviembre)](#-quincena-4-11---24-noviembre)  
-  - [📅 Quincena 5 (25 noviembre - 5 diciembre)](#-quincena-5-25-noviembre---5-diciembre)  
+  - [📅 Quincena 5 (25 noviembre - 5 diciembre)](#-quincena-5-25-noviembre---5-diciembre)
+- [📑 Modificaciones en la documentación](#-modificaciones-en-la-documentación)  
 
 ---
 
@@ -122,6 +123,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 - ✅ App completa y funcional  
 - ✅ Documentación final  
 
-##Modificaciones en la documentación
-- Modificado el diagrama de clases había clases vacías y su contenido en otras clases, debido a mal tabulación del UML y no me había dado cuenta. Además actualizado el tipo de datos, tanto en el diagrama de clases como en las entidades en Kotlin, de Instant a Timestamp que funciona mejor en Firebase.
-- Modificado el modelo ER (para que sea una versión más "normalizada" de lo que sería un modelo ER si fuese SQL)
+## 📑 Modificaciones en la documentación
+- Modificaciones 16/Octubre
+  - Modificado el diagrama de clases había clases vacías y su contenido en otras clases, debido a mal tabulación del UML y no me había dado cuenta. Además actualizado el tipo de datos, tanto en el diagrama  de clases como en las entidades en Kotlin, de Instant a Timestamp que funciona mejor en Firebase.
+  - Modificado el modelo ER (para que sea una versión más "normalizada" de lo que sería un modelo ER si fuese SQL)
