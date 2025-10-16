@@ -1,13 +1,15 @@
 package com.example.anacampospi.modelo
 
 import com.example.anacampospi.modelo.enums.TipoContenido
-import java.time.Instant
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.ServerTimestamp
+
 
 data class Match(
     val idContenido: String = "",
     val usuariosCoincidentes: List<String> = emptyList(), // unanimidad = tamaño == miembros del grupo
-    val primerCoincidenteEn: Instant = Instant.EPOCH,
-    val actualizadoEn: Instant = Instant.EPOCH,
+    @ServerTimestamp val primerCoincidenteEn: Timestamp? = null,
+    val actualizadoEn: Timestamp? = null,
     // metadatos de catálogo para pintar tarjetas/listado
     val titulo: String = "",
     val posterUrl: String = "",

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "553208911055",
+    "project_id": "anacampospi",
+    "storage_bucket": "anacampospi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:553208911055:android:7532a7fc7a3c432f4293ba",
+        "android_client_info": {
+          "package_name": "com.example.anacampospi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNw_aGr-1R7KeT-E96iKU7r6AFFJkbGZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

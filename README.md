@@ -121,3 +121,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **Entrega final:**  
 - ✅ App completa y funcional  
 - ✅ Documentación final  
+
+##Modificaciones en la documentación
+- Modificado el diagrama de clases había clases vacías y su contenido en otras clases, debido a mal tabulación del UML y no me había dado cuenta. Además actualizado el tipo de datos, tanto en el diagrama de clases como en las entidades en Kotlin, de Instant a Timestamp que funciona mejor en Firebase.
+- Modificado el modelo ER (para que sea una versión más "normalizada" de lo que sería un modelo ER si fuese SQL)
