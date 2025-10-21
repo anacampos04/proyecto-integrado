@@ -17,6 +17,9 @@ import com.example.anacampospi.ui.theme.AnacampospiTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+/**
+ * Host de navegación mínimo para probar login/registro
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
