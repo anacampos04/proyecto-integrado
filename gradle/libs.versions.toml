@@ -10,12 +10,14 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.02"
 google-services = "4.4.4"
 firebase-bom = "34.4.0"
+materialIconsExtended = "1.7.5"
 play-services-auth = "21.2.0"
 navigation-compose = "2.8.3"
 lifecycle-viewmodel-compose = "2.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

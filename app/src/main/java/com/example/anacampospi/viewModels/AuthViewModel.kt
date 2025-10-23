@@ -1,4 +1,4 @@
-package com.example.anacampospi.ui.auth
+package com.example.anacampospi.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * ViewModel que orquesta el login/registro y garantiza que el doc de usuario existe.
@@ -30,14 +31,20 @@ class AuthViewModel(
 
     //Registro con email/contraseña + creación/actualización de doc en /usuarios.
     fun register(email: String, pass: String) = op {
-        authRepo.registerEmail(email, pass) //crea y deja la sesión abierta
-        ensureUser() //crea o actualiza doc en Firestore
+        try {
+            authRepo.registerEmail(email, pass) //crea y deja la sesión abierta
+            ensureUser() //crea o actualiza doc en Firestore
+        } catch (e: Exception) {
+            // Si falla la creación del documento, eliminar el usuario de Auth
+            auth.currentUser?.delete()?.await()
+            throw e // Re-lanzar la excepción para que se muestre el error
+        }
     }
 
     //Login con email/contraseña
     fun login(email: String, pass: String) = op {
         authRepo.loginEmail(email, pass)
-        ensureUser()
+        ensureUser() //creará el doc si no existe (recuperación automática)
     }
 
     //Login con Google (recibe el idToken)
