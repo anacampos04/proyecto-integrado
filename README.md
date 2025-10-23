@@ -63,9 +63,9 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **🎯 Objetivo:** Autenticación y primer flujo de contenido  
 
 **Tareas:**
-- [ ] Configuración de Firebase (Auth + Firestore)
+- [x] Configuración de Firebase (Auth + Firestore)
 - [ ] Creación de pantallas de inicio de sesión y registro  
-- [ ] Guardado de datos de usuario en Firestore  
+- [x] Guardado de datos de usuario en Firestore  
 - [ ] Obtener contenido de la API  
 - [ ] Swipe funcional  
 - [ ] Guardado de likes/dislikes  
