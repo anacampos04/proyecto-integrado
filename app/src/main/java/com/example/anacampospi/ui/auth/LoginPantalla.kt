@@ -63,6 +63,11 @@ fun LoginPantalla(
         }
     }
 
+    // Resetear el estado cuando se entra a la pantalla de login
+    LaunchedEffect(Unit) {
+        vm.resetState()
+    }
+
     LaunchedEffect(state.success) {
         if (state.success) onSuccess()
     }

@@ -40,14 +40,13 @@ fun AppNavigation() {
     val authVm: AuthViewModel = viewModel()
     val setupVm: SetupViewModel = viewModel()
 
-    // Determinar la ruta inicial basándose en el estado de autenticación
-    val startDestination = remember {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        if (currentUser != null) "home" else "login"
-    }
+    // Determinar inicio basado en si hay sesión activa
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val startDestination = if (currentUser != null) "checkSetup" else "login"
 
     NavHost(navController = nav, startDestination = startDestination) {
         composable("login") {
+            // No auto-navegar desde login, solo cuando el usuario hace login exitoso
             LoginPantalla(
                 vm = authVm,
                 onSuccess = {
@@ -84,6 +83,12 @@ fun AppNavigation() {
                     nav.navigate("home") {
                         popUpTo("checkSetup") { inclusive = true }
                     }
+                },
+                onNotAuthenticated = {
+                    // Si llegó aquí sin autenticación, volver a login
+                    nav.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -100,7 +105,16 @@ fun AppNavigation() {
         }
 
         composable("home") {
-            HomeScreen()
+            HomeScreen(
+                onLogout = {
+                    // Cerrar sesión de Firebase
+                    FirebaseAuth.getInstance().signOut()
+                    // Navegar a login y limpiar todo el back stack
+                    nav.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
@@ -111,29 +125,35 @@ fun AppNavigation() {
 @Composable
 fun CheckSetupScreen(
     onSetupNeeded: () -> Unit,
-    onSetupComplete: () -> Unit
+    onSetupComplete: () -> Unit,
+    onNotAuthenticated: () -> Unit = {}
 ) {
     val authRepo = remember { AuthRepository() }
     val usuarioRepo = remember { UsuarioRepository() }
 
     LaunchedEffect(Unit) {
-        val uid = authRepo.currentUid()
-        if (uid != null) {
-            try {
-                val usuario = usuarioRepo.getUsuario(uid)
+        // Verificar directamente si hay usuario autenticado en Firebase
+        val currentUser = FirebaseAuth.getInstance().currentUser
 
-                // Si el usuario no tiene plataformas configuradas, necesita setup
-                if (usuario?.plataformas.isNullOrEmpty()) {
-                    onSetupNeeded()
-                } else {
-                    onSetupComplete()
-                }
-            } catch (e: Exception) {
-                // En caso de error, ir a setup por seguridad
+        if (currentUser == null) {
+            // Si no hay usuario autenticado, esto no debería pasar
+            // pero si pasa, volver a setup (o login si se implementa)
+            onNotAuthenticated()
+            return@LaunchedEffect
+        }
+
+        val uid = currentUser.uid
+        try {
+            val usuario = usuarioRepo.getUsuario(uid)
+
+            // Si el usuario no tiene plataformas configuradas, necesita setup
+            if (usuario?.plataformas.isNullOrEmpty()) {
                 onSetupNeeded()
+            } else {
+                onSetupComplete()
             }
-        } else {
-            // No debería pasar, pero por seguridad volver a login
+        } catch (e: Exception) {
+            // En caso de error, ir a setup por seguridad
             onSetupNeeded()
         }
     }
@@ -148,7 +168,7 @@ fun CheckSetupScreen(
 }
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onLogout: () -> Unit) {
     val authRepo = remember { AuthRepository() }
     val usuarioRepo = remember { UsuarioRepository() }
     var codigoInvitacion by remember { mutableStateOf<String?>(null) }
@@ -196,6 +216,17 @@ fun HomeScreen() {
                     )
                 }
             }
+        }
+
+        androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(32.dp))
+
+        // Botón temporal de cerrar sesión
+        androidx.compose.material3.OutlinedButton(
+            onClick = onLogout,
+            modifier = androidx.compose.ui.Modifier
+                .padding(horizontal = 32.dp)
+        ) {
+            Text("Cerrar sesión")
         }
     }
 }

@@ -29,6 +29,11 @@ class AuthViewModel(
     private val _state = MutableStateFlow(AuthUiState())
     val state = _state.asStateFlow()
 
+    // Resetear el estado (útil al volver a login después de logout)
+    fun resetState() {
+        _state.value = AuthUiState()
+    }
+
     //Registro con email/contraseña + creación/actualización de doc en /usuarios.
     fun register(email: String, pass: String) = op {
         try {
