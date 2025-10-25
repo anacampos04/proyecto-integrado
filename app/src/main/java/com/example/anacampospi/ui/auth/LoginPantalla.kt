@@ -40,6 +40,7 @@ fun LoginPantalla(
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var showResetPasswordDialog by remember { mutableStateOf(false) }
 
     // Validaciones
     val emailError = remember(email) {
@@ -150,7 +151,38 @@ fun LoginPantalla(
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Botón de "¿Olvidaste tu contraseña?"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = { showResetPasswordDialog = true }
+                ) {
+                    Text(
+                        "¿Olvidaste tu contraseña?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Mensaje de éxito para reset password
+            if (state.resetEmailSent) {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "✅ Te hemos enviado un correo para recuperar tu contraseña. Revisa tu bandeja de entrada.",
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             // Mensaje de error (antes de los botones para que sea visible)
             state.error?.let { error ->
@@ -230,4 +262,75 @@ fun LoginPantalla(
             }
         }
     }
+
+    // Diálogo para recuperar contraseña
+    if (showResetPasswordDialog) {
+        ResetPasswordDialog(
+            onDismiss = { showResetPasswordDialog = false },
+            onConfirm = { resetEmail ->
+                vm.resetPassword(resetEmail)
+                showResetPasswordDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ResetPasswordDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var resetEmail by remember { mutableStateOf("") }
+
+    val emailError = remember(resetEmail) {
+        if (resetEmail.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(resetEmail).matches()) {
+            "Email inválido"
+        } else null
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Recuperar contraseña",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedTextField(
+                    value = resetEmail,
+                    onValueChange = { resetEmail = it },
+                    label = { Text("Correo electrónico") },
+                    leadingIcon = { Icon(Icons.Default.Email, null) },
+                    singleLine = true,
+                    isError = emailError != null,
+                    supportingText = emailError?.let { { Text(it) } },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(resetEmail.trim()) },
+                enabled = resetEmail.isNotEmpty() && emailError == null
+            ) {
+                Text("Enviar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

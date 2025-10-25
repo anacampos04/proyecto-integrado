@@ -16,14 +16,13 @@ class UsuarioRepository(
     private val col = db.collection("usuarios")
 
     /**Crea el doc /usuarios/{uid} si no existe.
-     * Si ya existe, actualiza nombre/foto si vienen del proveedor (Google).
+     * Si ya existe, actualiza nombre si viene del proveedor (Google).
      * * Genera un código de invitación único al crear el usuario.
      */
     suspend fun ensureUserDoc(
         uid: String,
         correo: String?,
-        nombre: String?,
-        foto: String?
+        nombre: String?
     ) {
         val doc = col.document(uid)
         val snap = doc.get().await()
@@ -34,7 +33,6 @@ class UsuarioRepository(
                 idUsuario = uid,
                 correo = correo.orEmpty(),
                 nombre = nombre.orEmpty(),
-                fotoUrl = foto.orEmpty(),
                 codigoInvitacion = codigoInvitacion,
                 creadoEn = null // Firestore lo establecerá con @ServerTimestamp
             )
@@ -42,7 +40,6 @@ class UsuarioRepository(
         } else { //si ya existe refrescar los datos que vengan del proveedor si hay
             val updates = mutableMapOf<String, Any>()
             if (!nombre.isNullOrBlank()) updates["nombre"] = nombre
-            if (!foto.isNullOrBlank())   updates["fotoUrl"] = foto
             if (updates.isNotEmpty()) doc.update(updates).await()
         }
     }
@@ -77,12 +74,17 @@ class UsuarioRepository(
     }
 
     //Obtiene un usuario por su UID
-    suspend fun getUsuario(uid: String): Usuario? {
+    suspend fun getUsuario(uid: String): Result<Usuario> {
         return try {
             val snap = col.document(uid).get().await()
-            snap.toObject(Usuario::class.java)
+            val usuario = snap.toObject(Usuario::class.java)
+            if (usuario != null) {
+                Result.success(usuario)
+            } else {
+                Result.failure(Exception("Usuario no encontrado"))
+            }
         } catch (e: Exception) {
-            null
+            Result.failure(e)
         }
     }
 
@@ -108,8 +110,13 @@ class UsuarioRepository(
     }
 
     //Actualiza las plataformas del usuario
-    suspend fun actualizarPlataformas(uid: String, plataformas: List<String>) {
-        col.document(uid).update("plataformas", plataformas).await()
+    suspend fun actualizarPlataformas(uid: String, plataformas: List<String>): Result<Unit> {
+        return try {
+            col.document(uid).update("plataformas", plataformas).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     //Actualiza la región del usuario
@@ -117,14 +124,15 @@ class UsuarioRepository(
         col.document(uid).update("region", region).await()
     }
 
-    //Actualiza el perfil del usuario (nombre y foto)
-    suspend fun actualizarPerfil(uid: String, nombre: String?, fotoUrl: String?) {
-        val updates = mutableMapOf<String, Any>()
-        if (!nombre.isNullOrBlank()) updates["nombre"] = nombre
-        if (fotoUrl != null) updates["fotoUrl"] = fotoUrl
-
-        if (updates.isNotEmpty()) {
-            col.document(uid).update(updates).await()
+    //Actualiza el nombre del usuario
+    suspend fun actualizarNombre(uid: String, nombre: String): Result<Unit> {
+        return try {
+            if (nombre.isNotBlank()) {
+                col.document(uid).update("nombre", nombre).await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

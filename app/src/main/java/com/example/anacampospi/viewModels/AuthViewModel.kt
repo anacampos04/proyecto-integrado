@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,7 +18,8 @@ import kotlinx.coroutines.tasks.await
 data class AuthUiState(
     val loading: Boolean = false,
     val error: String? = null,
-    val success: Boolean = false
+    val success: Boolean = false,
+    val resetEmailSent: Boolean = false
 )
 
 class AuthViewModel(
@@ -35,10 +37,10 @@ class AuthViewModel(
     }
 
     //Registro con email/contraseña + creación/actualización de doc en /usuarios.
-    fun register(email: String, pass: String) = op {
+    fun register(email: String, password: String, nombre: String) = op {
         try {
-            authRepo.registerEmail(email, pass) //crea y deja la sesión abierta
-            ensureUser() //crea o actualiza doc en Firestore
+            authRepo.registerEmail(email, password) //crea y deja la sesión abierta
+            ensureUser(nombreOverride = nombre) //crea o actualiza doc en Firestore
         } catch (e: Exception) {
             // Si falla la creación del documento, eliminar el usuario de Auth
             auth.currentUser?.delete()?.await()
@@ -58,16 +60,15 @@ class AuthViewModel(
         ensureUser()
     }
 
-    //Garantiza que /usuarios/{uid} existe y está actualizado con los datos básicos (correo, nombre, foto).
-    private suspend fun ensureUser() {
+    //Garantiza que /usuarios/{uid} existe y está actualizado con los datos básicos (correo, nombre).
+    private suspend fun ensureUser(nombreOverride: String? = null) {
         val u = auth.currentUser ?: throw IllegalStateException("User null (no autenticada)")
         // log rápido
         android.util.Log.d("Auth", "UID=${u.uid} email=${u.email}")
         usuarioRepo.ensureUserDoc(
             uid = u.uid,
             correo = u.email,
-            nombre = u.displayName,
-            foto = u.photoUrl?.toString()
+            nombre = nombreOverride ?: u.displayName
         )
     }
 
@@ -84,7 +85,85 @@ class AuthViewModel(
                 block()
                 _state.value = AuthUiState(success = true)
             } catch (e: Exception) {
-                _state.value = AuthUiState(error = e.message ?: "Error desconocido")
+                _state.value = AuthUiState(error = traducirErrorFirebase(e))
+            }
+        }
+    }
+
+    /**
+     * Envía un correo para recuperar la contraseña
+     */
+    fun resetPassword(email: String) {
+        viewModelScope.launch {
+            _state.value = AuthUiState(loading = true)
+            try {
+                auth.sendPasswordResetEmail(email).await()
+                _state.value = AuthUiState(
+                    success = false, // No navegamos a home
+                    error = null,
+                    loading = false,
+                    resetEmailSent = true
+                )
+            } catch (e: Exception) {
+                _state.value = AuthUiState(error = traducirErrorFirebase(e))
+            }
+        }
+    }
+
+    /**
+     * Traduce los errores de Firebase a mensajes amigables en español
+     */
+    private fun traducirErrorFirebase(e: Exception): String {
+        // Si es FirebaseAuthException, usar el código de error
+        if (e is FirebaseAuthException) {
+            return when (e.errorCode) {
+                // Errores de login
+                "ERROR_INVALID_CREDENTIAL",
+                "ERROR_INVALID_EMAIL",
+                "ERROR_WRONG_PASSWORD",
+                "ERROR_USER_NOT_FOUND" ->
+                    "❌ Email o contraseña incorrectos. Por favor, verifica tus datos."
+
+                // Errores de registro
+                "ERROR_EMAIL_ALREADY_IN_USE" ->
+                    "📧 Este email ya está registrado. Intenta iniciar sesión."
+
+                "ERROR_WEAK_PASSWORD" ->
+                    "🔒 La contraseña es muy débil. Usa al menos 6 caracteres con números."
+
+                // Errores de cuenta
+                "ERROR_USER_DISABLED" ->
+                    "⛔ Esta cuenta ha sido deshabilitada. Contacta con soporte."
+
+                // Errores de red
+                "ERROR_NETWORK_REQUEST_FAILED" ->
+                    "📡 Error de conexión. Verifica tu internet e inténtalo de nuevo."
+
+                else -> {
+                    // Log para debugging
+                    android.util.Log.e("AuthViewModel", "Error code: ${e.errorCode}, message: ${e.message}")
+                    "⚠️ ${e.message ?: "Algo salió mal. Inténtalo de nuevo."}"
+                }
+            }
+        }
+
+        // Fallback: buscar en el mensaje
+        val errorMessage = e.message ?: ""
+        return when {
+            errorMessage.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) ||
+            errorMessage.contains("invalid-credential", ignoreCase = true) ||
+            errorMessage.contains("invalid-email", ignoreCase = true) ->
+                "❌ Email o contraseña incorrectos. Por favor, verifica tus datos."
+
+            errorMessage.contains("email-already-in-use", ignoreCase = true) ->
+                "📧 Este email ya está registrado. Intenta iniciar sesión."
+
+            errorMessage.contains("network", ignoreCase = true) ->
+                "📡 Error de conexión. Verifica tu internet e inténtalo de nuevo."
+
+            else -> {
+                android.util.Log.e("AuthViewModel", "Unhandled error: ${e.javaClass.name}, message: $errorMessage")
+                "⚠️ $errorMessage"
             }
         }
     }

@@ -2,4 +2,22 @@
 <resources>
 
     <style name="Theme.Anacampospi" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Tema para la Splash Screen -->
+    <style name="Theme.Anacampospi.Starting" parent="Theme.SplashScreen">
+        <!-- Color de fondo de la splash screen -->
+        <item name="windowSplashScreenBackground">@color/black</item>
+        <!-- Icono que se muestra en el centro -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- Color del icono animado (opcional) -->
+        <item name="windowSplashScreenIconBackgroundColor">@color/black</item>
+        <!-- Duración de la animación del icono (opcional, default 1000ms) -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <!-- Color de la barra de navegación durante el splash -->
+        <item name="android:navigationBarColor">@color/black</item>
+        <!-- Color de la barra de estado durante el splash -->
+        <item name="android:statusBarColor">@color/black</item>
+        <!-- Tema que se aplicará después del splash -->
+        <item name="postSplashScreenTheme">@style/Theme.Anacampospi</item>
+    </style>
 </resources>

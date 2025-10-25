@@ -3,21 +3,31 @@ package com.example.anacampospi
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.ui.auth.LoginPantalla
 import com.example.anacampospi.ui.auth.RegistroPantalla
+// VERSIÓN ACTUAL: V2 (botón central elevado estilo Tinder)
+// Para volver a la versión anterior, cambia "V2" por "CurvedBottomNavigation"
+import com.example.anacampospi.ui.componentes.CurvedBottomNavigationV2 as CurvedBottomNavigation
+import com.example.anacampospi.ui.componentes.DefaultNavItems
+import com.example.anacampospi.ui.config.ConfiguracionRondaScreen
+import com.example.anacampospi.ui.matches.MatchesScreen
+import com.example.anacampospi.ui.perfil.PerfilScreen
 import com.example.anacampospi.ui.setup.SetupInicialScreen
+import com.example.anacampospi.ui.swipe.SwipeScreen
 import com.example.anacampospi.ui.theme.PopCornTribuTheme
 import com.example.anacampospi.viewModels.AuthViewModel
 import com.example.anacampospi.viewModels.SetupViewModel
@@ -25,6 +35,9 @@ import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Instalar splash screen ANTES de super.onCreate()
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
         setContent {
             PopCornTribuTheme {
@@ -39,6 +52,11 @@ fun AppNavigation() {
     val nav = rememberNavController()
     val authVm: AuthViewModel = viewModel()
     val setupVm: SetupViewModel = viewModel()
+
+    // Estado para guardar la configuración de la ronda
+    var configPlataformas by remember { mutableStateOf<List<String>?>(null) }
+    var configTipo by remember { mutableStateOf<com.example.anacampospi.modelo.enums.TipoContenido?>(null) }
+    var configGeneros by remember { mutableStateOf<List<Int>?>(null) }
 
     // Determinar inicio basado en si hay sesión activa
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -80,7 +98,7 @@ fun AppNavigation() {
                     }
                 },
                 onSetupComplete = {
-                    nav.navigate("home") {
+                    nav.navigate("mainScreen") {
                         popUpTo("checkSetup") { inclusive = true }
                     }
                 },
@@ -97,24 +115,96 @@ fun AppNavigation() {
             SetupInicialScreen(
                 vm = setupVm,
                 onComplete = {
-                    nav.navigate("home") {
+                    nav.navigate("mainScreen") {
                         popUpTo("setup") { inclusive = true }
                     }
                 }
             )
         }
 
-        composable("home") {
-            HomeScreen(
+        composable("mainScreen") {
+            MainScreenWithNavigation(
+                configPlataformas = configPlataformas,
+                configTipo = configTipo,
+                configGeneros = configGeneros,
+                onConfigChanged = { plataformas, tipo, generos ->
+                    configPlataformas = plataformas
+                    configTipo = tipo
+                    configGeneros = generos
+                },
                 onLogout = {
-                    // Cerrar sesión de Firebase
-                    FirebaseAuth.getInstance().signOut()
-                    // Navegar a login y limpiar todo el back stack
                     nav.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
             )
+        }
+    }
+}
+
+/**
+ * Pantalla principal con navegación inferior
+ */
+@Composable
+fun MainScreenWithNavigation(
+    configPlataformas: List<String>?,
+    configTipo: com.example.anacampospi.modelo.enums.TipoContenido?,
+    configGeneros: List<Int>?,
+    onConfigChanged: (List<String>, com.example.anacampospi.modelo.enums.TipoContenido?, List<Int>) -> Unit,
+    onLogout: () -> Unit
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: "home"
+
+    Scaffold(
+        bottomBar = {
+            CurvedBottomNavigation(
+                items = DefaultNavItems.items,
+                currentRoute = currentRoute,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        // Pop to start destination to avoid building up back stack
+                        popUpTo("home") { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            NavHost(
+                navController = navController,
+                startDestination = "home"
+            ) {
+                composable("home") {
+                    ConfiguracionRondaScreen(
+                        onIniciarRonda = { plataformas, tipo, generos ->
+                            onConfigChanged(plataformas, tipo, generos)
+                            navController.navigate("swipe")
+                        }
+                    )
+                }
+
+                composable("swipe") {
+                    SwipeScreen(
+                        plataformas = configPlataformas,
+                        tipo = configTipo,
+                        generos = configGeneros
+                    )
+                }
+
+                composable("matches") {
+                    MatchesScreen()
+                }
+
+                composable("perfil") {
+                    PerfilScreen(
+                        onLogout = onLogout
+                    )
+                }
+            }
         }
     }
 }
@@ -143,16 +233,18 @@ fun CheckSetupScreen(
         }
 
         val uid = currentUser.uid
-        try {
-            val usuario = usuarioRepo.getUsuario(uid)
 
+        val resultado = usuarioRepo.getUsuario(uid)
+        resultado.onSuccess { usuario ->
             // Si el usuario no tiene plataformas configuradas, necesita setup
-            if (usuario?.plataformas.isNullOrEmpty()) {
+            if (usuario.plataformas.isEmpty()) {
                 onSetupNeeded()
             } else {
                 onSetupComplete()
             }
-        } catch (e: Exception) {
+        }
+
+        resultado.onFailure {
             // En caso de error, ir a setup por seguridad
             onSetupNeeded()
         }
@@ -167,66 +259,3 @@ fun CheckSetupScreen(
     }
 }
 
-@Composable
-fun HomeScreen(onLogout: () -> Unit) {
-    val authRepo = remember { AuthRepository() }
-    val usuarioRepo = remember { UsuarioRepository() }
-    var codigoInvitacion by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        val uid = authRepo.currentUid()
-        if (uid != null) {
-            val usuario = usuarioRepo.getUsuario(uid)
-            codigoInvitacion = usuario?.codigoInvitacion
-        }
-    }
-
-    androidx.compose.foundation.layout.Column(
-        modifier = androidx.compose.ui.Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
-    ) {
-        Text(
-            "¡Has entrado! 🎬",
-            style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
-        )
-
-        androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(24.dp))
-
-        if (codigoInvitacion != null) {
-            androidx.compose.material3.Card(
-                modifier = androidx.compose.ui.Modifier.padding(16.dp)
-            ) {
-                androidx.compose.foundation.layout.Column(
-                    modifier = androidx.compose.ui.Modifier.padding(16.dp),
-                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "Tu código de invitación:",
-                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                    )
-                    androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
-                    Text(
-                        codigoInvitacion!!,
-                        style = androidx.compose.material3.MaterialTheme.typography.headlineSmall,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
-
-        androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(32.dp))
-
-        // Botón temporal de cerrar sesión
-        androidx.compose.material3.OutlinedButton(
-            onClick = onLogout,
-            modifier = androidx.compose.ui.Modifier
-                .padding(horizontal = 32.dp)
-        ) {
-            Text("Cerrar sesión")
-        }
-    }
-}

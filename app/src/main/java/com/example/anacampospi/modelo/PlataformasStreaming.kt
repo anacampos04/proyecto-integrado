@@ -1,13 +1,16 @@
 package com.example.anacampospi.modelo
 
+import androidx.annotation.DrawableRes
+import com.example.anacampospi.R
+
 /**
  * Representa las plataformas de streaming disponibles.
  * El id debe coincidir con el provider_id de TMDB para filtrar correctamente.
  */
 data class PlataformaStreaming(
-    val id: String,           // ID de TMDB (ej: "8" para Netflix)
-    val nombre: String,       // Nombre legible
-    val icono: String = ""    // URL del icono (opcional, se puede cargar de TMDB)
+    val id: String,              // ID de TMDB (ej: "8" para Netflix)
+    val nombre: String,          // Nombre legible
+    @DrawableRes val icono: Int  // ID del recurso drawable local
 )
 
 /**
@@ -18,47 +21,56 @@ object PlataformasCatalogo {
 
     val NETFLIX = PlataformaStreaming(
         id = "8",
-        nombre = "Netflix"
+        nombre = "Netflix",
+        icono = R.drawable.ic_platform_netflix
     )
 
     val AMAZON_PRIME = PlataformaStreaming(
         id = "119",
-        nombre = "Amazon Prime Video"
+        nombre = "Amazon Prime Video",
+        icono = R.drawable.ic_platform_amazon
     )
 
     val DISNEY_PLUS = PlataformaStreaming(
         id = "337",
-        nombre = "Disney+"
+        nombre = "Disney+",
+        icono = R.drawable.ic_platform_disney
     )
 
     val HBO_MAX = PlataformaStreaming(
         id = "384",
-        nombre = "HBO Max"
+        nombre = "HBO Max",
+        icono = R.drawable.ic_platform_hbo
     )
 
     val APPLE_TV = PlataformaStreaming(
         id = "350",
-        nombre = "Apple TV+"
+        nombre = "Apple TV+",
+        icono = R.drawable.ic_platform_apple
     )
 
     val MOVISTAR_PLUS = PlataformaStreaming(
         id = "149",
-        nombre = "Movistar Plus+"
+        nombre = "Movistar Plus+",
+        icono = R.drawable.ic_platform_movistar
     )
 
     val FILMIN = PlataformaStreaming(
         id = "63",
-        nombre = "Filmin"
+        nombre = "Filmin",
+        icono = R.drawable.ic_platform_filmin
     )
 
     val RAKUTEN = PlataformaStreaming(
         id = "35",
-        nombre = "Rakuten TV"
+        nombre = "Rakuten TV",
+        icono = R.drawable.ic_platform_rakuten
     )
 
     val SKYSHOWTIME = PlataformaStreaming(
         id = "1773",
-        nombre = "SkyShowtime"
+        nombre = "SkyShowtime",
+        icono = R.drawable.ic_platform_skyshowtime
     )
 
     /**

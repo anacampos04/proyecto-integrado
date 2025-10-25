@@ -8,5 +8,8 @@ data class ContenidoLite(
     val tipo: TipoContenido = TipoContenido.PELICULA,
     val anioEstreno: Int = 0,
     val proveedores: List<String> = emptyList(),
-    val puntuacion: Double = 0.0
+    val puntuacion: Double = 0.0,
+    val sinopsis: String? = null,
+    val generos: List<String> = emptyList(),
+    val trailer: Trailer? = null
 )

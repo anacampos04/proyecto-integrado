@@ -72,37 +72,29 @@ private val DarkColors = darkColorScheme(
  */
 @Composable
 fun PopCornTribuTheme(
-    useDarkTheme: Boolean = isSystemInDarkTheme(),
+    useDarkTheme: Boolean = true, // SIEMPRE MODO OSCURO
     // Si quieres colores dinámicos (Android 12+), pon true:
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Desactivado para forzar fondo negro
     content: @Composable () -> Unit
 ) {
-    val colorScheme =
-        if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Mantiene la personalidad: forzamos primarios sobre dynamic
-            val base = if (useDarkTheme) dynamicDarkColorScheme(LocalView.current.context)
-            else dynamicLightColorScheme(LocalView.current.context)
+    // Forzar tema oscuro con fondo negro puro
+    val colorScheme = DarkColors.copy(
+        background = Color.Black,
+        surface = Color.Black,
+        onBackground = Color(0xFFEAEAEA),
+        onSurface = Color(0xFFEAEAEA)
+    )
 
-            base.copy(
-                primary = TealPastel,
-                onPrimary = if (useDarkTheme) Color.Black else Color.White,
-                secondary = if (useDarkTheme) YellowDeep else PopcornYellow,
-                tertiary = if (useDarkTheme) RedDeep else CinemaRed
-            )
-        } else {
-            if (useDarkTheme) DarkColors else LightColors
-        }
-
-    // Status bar/navigation bar legibles
+    // Status bar/navigation bar negras
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.surface.toArgb()
-            window.navigationBarColor = colorScheme.surface.toArgb()
+            window.statusBarColor = Color.Black.toArgb()
+            window.navigationBarColor = Color.Black.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !useDarkTheme
-                isAppearanceLightNavigationBars = !useDarkTheme
+                isAppearanceLightStatusBars = false // Iconos blancos en fondo negro
+                isAppearanceLightNavigationBars = false
             }
         }
     }

@@ -66,10 +66,10 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 - [x] Configuración de Firebase (Auth + Firestore)
 - [ ] Creación de pantallas de inicio de sesión y registro  
 - [x] Guardado de datos de usuario en Firestore  
-- [ ] Obtener contenido de la API  
-- [ ] Swipe funcional  
-- [ ] Guardado de likes/dislikes  
-- [ ] Documentación v2  
+- [x] Obtener contenido de la API  
+- [x] Swipe funcional  
+- [x] Guardado de likes/dislikes  
+- [ ] Documentación v2
 
 **Entrega quincenal:**  
 - ✅ Login/registro  

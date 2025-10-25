@@ -26,6 +26,7 @@ fun RegistroPantalla(
 ) {
     val state by vm.state.collectAsState()
 
+    var nombreUsuario by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
@@ -55,11 +56,17 @@ fun RegistroPantalla(
     }
 
     val formValido = email.isNotEmpty() &&
+            nombreUsuario.isNotEmpty() &&
             pass.isNotEmpty() &&
             confirmPass.isNotEmpty() &&
             emailError == null &&
             passError == null &&
             confirmPassError == null
+
+    // Resetear el estado cuando se entra a la pantalla de registro
+    LaunchedEffect(Unit) {
+        vm.resetState()
+    }
 
     LaunchedEffect(state.success) {
         if (state.success) onSuccess()
@@ -108,7 +115,21 @@ fun RegistroPantalla(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo de email
+            // Campo de nombre de usuario (PRIMERO)
+            OutlinedTextField(
+                value = nombreUsuario,
+                onValueChange = { nombreUsuario = it },
+                label = { Text("Nombre de usuario") },
+                leadingIcon = { Icon(Icons.Default.Person, null) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+
+            // Campo de email (SEGUNDO)
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -124,7 +145,7 @@ fun RegistroPantalla(
                 )
             )
 
-            // Campo de contraseña
+            // Campo de contraseña (TERCERO)
             OutlinedTextField(
                 value = pass,
                 onValueChange = { pass = it },
@@ -227,7 +248,13 @@ fun RegistroPantalla(
 
             // Botón de registro
             Button(
-                onClick = { vm.register(email.trim(), pass) },
+                onClick = {
+                    vm.register(
+                        email = email.trim(),
+                        password = pass,
+                        nombre = nombreUsuario.trim()
+                    )
+                },
                 enabled = formValido && !state.loading,
                 modifier = Modifier
                     .fillMaxWidth()

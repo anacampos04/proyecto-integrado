@@ -20,6 +20,15 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Leer API key de TMDb desde local.properties
+        val properties = org.jetbrains.kotlin.konan.properties.Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(localPropertiesFile.inputStream())
+        }
+        val tmdbApiKey = properties.getProperty("tmdb.api.key") ?: "YOUR_API_KEY_HERE"
+        buildConfigField("String", "TMDB_API_KEY", "\"$tmdbApiKey\"")
     }
 
     buildTypes {
@@ -40,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -70,6 +80,16 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.material.icons.extended)
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
+    // Retrofit para llamadas HTTP a TMDb API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Coil para carga de imágenes (posters)
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
