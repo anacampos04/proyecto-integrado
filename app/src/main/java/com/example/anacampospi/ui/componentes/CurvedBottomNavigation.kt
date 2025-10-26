@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.anacampospi.ui.theme.*
 import kotlin.math.abs
 
 /**
@@ -36,29 +38,25 @@ data class CurvedNavItem(
 )
 
 /**
- * Barra de navegación inferior con curva animada
- * Inspirada en rn-curved-navigation-bar
+ * Barra de navegación inferior con curva animada invertida - Estilo moderno 2025
+ * La curva ahora simula esquinas redondeadas de la pantalla sobre la navbar
  */
 @Composable
 fun CurvedBottomNavigation(
     items: List<CurvedNavItem>,
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    navBarColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    selectedBackgroundColor: Color = Color.Black,
-    selectedColor: Color = MaterialTheme.colorScheme.primary,
-    unselectedColor: Color = MaterialTheme.colorScheme.onSurface
+    modifier: Modifier = Modifier
 ) {
     val selectedIndex = items.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
     val density = LocalDensity.current
 
-    // Animación suave del índice seleccionado
+    // Animación más fluida del índice seleccionado
     val animatedSelectedIndex by animateFloatAsState(
         targetValue = selectedIndex.toFloat(),
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "selectedIndex"
     )
@@ -66,44 +64,44 @@ fun CurvedBottomNavigation(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(70.dp)
     ) {
-        // Fondo con la curva
+        // Fondo con la curva invertida (esquinas redondeadas de la pantalla)
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .graphicsLayer {
                     with(density) {
-                        shadowElevation = 8.dp.toPx()
+                        shadowElevation = 16.dp.toPx()
                     }
-                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                    clip = true
+                    ambientShadowColor = GlowTeal
+                    spotShadowColor = GlowTeal
                 }
         ) {
-            val curveWidth = with(density) { 100.dp.toPx() }
-            val curveHeight = with(density) { 40.dp.toPx() }
+            val curveWidth = with(density) { 80.dp.toPx() }
+            val curveDepth = with(density) { 20.dp.toPx() }
             val itemWidth = size.width / items.size
             val curveCenter = itemWidth * (animatedSelectedIndex + 0.5f)
 
             val path = Path().apply {
                 moveTo(0f, 0f)
 
-                // Línea hasta el inicio de la curva
+                // Línea hasta el inicio de la curva invertida
                 lineTo(curveCenter - curveWidth / 2, 0f)
 
-                // Curva hacia arriba (bezier cuadrática)
+                // Curva hacia abajo (invertida) - lado izquierdo
                 quadraticBezierTo(
                     curveCenter - curveWidth / 4, 0f,
-                    curveCenter - curveWidth / 4, -curveHeight / 2
+                    curveCenter - curveWidth / 4, curveDepth / 2
                 )
 
-                // Curva del arco superior
+                // Curva del arco inferior (invertida)
                 quadraticBezierTo(
-                    curveCenter, -curveHeight,
-                    curveCenter + curveWidth / 4, -curveHeight / 2
+                    curveCenter, curveDepth,
+                    curveCenter + curveWidth / 4, curveDepth / 2
                 )
 
-                // Curva bajando
+                // Curva subiendo - lado derecho
                 quadraticBezierTo(
                     curveCenter + curveWidth / 4, 0f,
                     curveCenter + curveWidth / 2, 0f
@@ -116,9 +114,15 @@ fun CurvedBottomNavigation(
                 close()
             }
 
+            // Fondo con gradiente moderno
             drawPath(
                 path = path,
-                color = navBarColor
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        SurfaceLight.copy(alpha = 0.95f),
+                        SurfaceDark.copy(alpha = 0.95f)
+                    )
+                )
             )
         }
 
@@ -126,18 +130,18 @@ fun CurvedBottomNavigation(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 4.dp),
+                .align(Alignment.Center)
+                .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
                 val isSelected = currentRoute == item.route
                 val offsetY by animateDpAsState(
-                    targetValue = if (isSelected) (-28).dp else 0.dp,
+                    targetValue = if (isSelected) (-8).dp else 0.dp,
                     animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMedium
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
                     ),
                     label = "offsetY"
                 )
@@ -146,9 +150,6 @@ fun CurvedBottomNavigation(
                     icon = item.icon,
                     label = item.label,
                     isSelected = isSelected,
-                    selectedBackgroundColor = selectedBackgroundColor,
-                    selectedColor = selectedColor,
-                    unselectedColor = unselectedColor,
                     offsetY = offsetY,
                     onClick = { onNavigate(item.route) },
                     modifier = Modifier.weight(1f)
@@ -159,27 +160,35 @@ fun CurvedBottomNavigation(
 }
 
 /**
- * Item individual de la barra de navegación
+ * Item individual de la barra de navegación - Estilo moderno
  */
 @Composable
 private fun NavBarItem(
     icon: ImageVector,
     label: String,
     isSelected: Boolean,
-    selectedBackgroundColor: Color,
-    selectedColor: Color,
-    unselectedColor: Color,
     offsetY: androidx.compose.ui.unit.Dp,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Animación más fluida de escala
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.2f else 1f,
+        targetValue = if (isSelected) 1.15f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
         ),
         label = "scale"
+    )
+
+    // Animación de alpha para transición más suave
+    val alpha by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0.6f,
+        animationSpec = tween(
+            durationMillis = 300,
+            easing = FastOutSlowInEasing
+        ),
+        label = "alpha"
     )
 
     Box(
@@ -192,28 +201,37 @@ private fun NavBarItem(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Solo iconos, sin labels
         Box(
             contentAlignment = Alignment.Center
         ) {
-            // Círculo de fondo para el ítem seleccionado
+            // Círculo de fondo con gradiente para el ítem seleccionado
             if (isSelected) {
                 Box(
                     modifier = Modifier
                         .size(56.dp)
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = CircleShape,
+                            ambientColor = GlowTeal,
+                            spotColor = GlowTeal
+                        )
                         .clip(CircleShape)
-                        .background(selectedBackgroundColor)
-                        .graphicsLayer {
-                            shadowElevation = 8f
-                        },
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    TealPastel,
+                                    TealDark
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        tint = selectedColor,
+                        tint = Color.Black,
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(26.dp)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale
@@ -224,7 +242,7 @@ private fun NavBarItem(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = unselectedColor,
+                    tint = Color.White.copy(alpha = alpha),
                     modifier = Modifier
                         .size(24.dp)
                         .graphicsLayer {

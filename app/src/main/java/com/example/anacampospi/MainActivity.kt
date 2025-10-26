@@ -19,9 +19,8 @@ import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.ui.auth.LoginPantalla
 import com.example.anacampospi.ui.auth.RegistroPantalla
-// VERSIÓN ACTUAL: V2 (botón central elevado estilo Tinder)
-// Para volver a la versión anterior, cambia "V2" por "CurvedBottomNavigation"
-import com.example.anacampospi.ui.componentes.CurvedBottomNavigationV2 as CurvedBottomNavigation
+// VERSIÓN ACTUAL: V1 (navbar con curva elegante)
+import com.example.anacampospi.ui.componentes.CurvedBottomNavigation
 import com.example.anacampospi.ui.componentes.DefaultNavItems
 import com.example.anacampospi.ui.config.ConfiguracionRondaScreen
 import com.example.anacampospi.ui.matches.MatchesScreen

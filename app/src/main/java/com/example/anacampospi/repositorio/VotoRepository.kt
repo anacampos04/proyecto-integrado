@@ -132,21 +132,35 @@ class VotoRepository {
 
     /**
      * Verifica si hay un match para un contenido específico
-     * Un match ocurre cuando otro usuario también dio like al mismo contenido
+     * Un match ocurre cuando un AMIGO también dio like al mismo contenido
+     * @param idUsuario ID del usuario actual
+     * @param idContenido ID del contenido votado
+     * @param idsAmigos Lista de IDs de amigos del usuario. Si está vacía, no hay match posible.
      */
-    suspend fun verificarMatch(idUsuario: String, idContenido: String): Result<Boolean> {
+    suspend fun verificarMatch(
+        idUsuario: String,
+        idContenido: String,
+        idsAmigos: List<String>
+    ): Result<Boolean> {
         return try {
-            // Buscar otros usuarios que dieron like al mismo contenido
+            // Si no tiene amigos, no puede haber match
+            if (idsAmigos.isEmpty()) {
+                return Result.success(false)
+            }
+
+            // Buscar amigos que dieron like al mismo contenido
             val snapshot = votosCollection
                 .whereEqualTo("idContenido", idContenido)
                 .whereEqualTo("voto", ValorVoto.ME_GUSTA)
                 .get()
                 .await()
 
-            // Verificar si hay al menos un voto de otro usuario
+            // Verificar si hay al menos un voto de un amigo (no del usuario actual)
             val hayMatch = snapshot.documents.any { doc ->
                 val voto = doc.toObject(Voto::class.java)
-                voto?.idUsuario != idUsuario
+                voto?.idUsuario != null &&
+                voto.idUsuario != idUsuario &&
+                idsAmigos.contains(voto.idUsuario)
             }
 
             Result.success(hayMatch)

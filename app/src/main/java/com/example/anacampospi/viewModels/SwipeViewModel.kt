@@ -9,6 +9,7 @@ import com.example.anacampospi.modelo.ContenidoLite
 import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.modelo.enums.ValorVoto
 import com.example.anacampospi.repositorio.AuthRepository
+import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.repositorio.VotoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,7 @@ class SwipeViewModel : ViewModel() {
     private val tmdbRepository: TmdbRepository = TmdbClient.createRepository(BuildConfig.TMDB_API_KEY)
     private val votoRepository = VotoRepository()
     private val authRepository = AuthRepository()
+    private val usuarioRepository = UsuarioRepository()
 
     private val _uiState = MutableStateFlow(SwipeUiState())
     val uiState: StateFlow<SwipeUiState> = _uiState.asStateFlow()
@@ -186,16 +188,27 @@ class SwipeViewModel : ViewModel() {
 
     /**
      * Verifica si hay un match para el contenido dado
+     * Solo verifica entre amigos del usuario
      */
     private fun verificarMatch(contenido: ContenidoLite) {
         viewModelScope.launch {
             val uid = authRepository.currentUid() ?: return@launch
 
-            val result = votoRepository.verificarMatch(uid, contenido.idContenido)
+            // Obtener la lista de amigos del usuario
+            val usuarioResult = usuarioRepository.getUsuario(uid)
+            val idsAmigos = usuarioResult.getOrNull()?.amigos ?: emptyList()
+
+            // Si no tiene amigos, no puede haber match
+            if (idsAmigos.isEmpty()) {
+                android.util.Log.d("SwipeViewModel", "No hay amigos, no se verifica match")
+                return@launch
+            }
+
+            val result = votoRepository.verificarMatch(uid, contenido.idContenido, idsAmigos)
 
             result.onSuccess { hayMatch ->
                 if (hayMatch) {
-                    android.util.Log.d("SwipeViewModel", "¡MATCH encontrado! ${contenido.titulo}")
+                    android.util.Log.d("SwipeViewModel", "¡MATCH encontrado con un amigo! ${contenido.titulo}")
                     _uiState.value = _uiState.value.copy(
                         hayMatch = true,
                         contenidoMatch = contenido

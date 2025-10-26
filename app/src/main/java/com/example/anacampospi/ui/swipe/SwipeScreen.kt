@@ -3,6 +3,7 @@ package com.example.anacampospi.ui.swipe
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -11,12 +12,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.ui.componentes.FlippableSwipeCard
+import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.SwipeViewModel
 
 /**
@@ -43,7 +48,15 @@ fun SwipeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Black,
+                        Night,
+                        Color.Black
+                    )
+                )
+            )
     ) {
             when {
                 // Estado de carga
@@ -56,10 +69,11 @@ fun SwipeScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = TealPastel)
                             Text(
                                 "Cargando contenido...",
-                                style = MaterialTheme.typography.bodyLarge
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White
                             )
                         }
                     }
@@ -79,14 +93,22 @@ fun SwipeScreen(
                             Text(
                                 "Error al cargar contenido",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.error
+                                color = CinemaRed
                             )
                             Text(
                                 uiState.error ?: "",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
                             )
-                            Button(onClick = { viewModel.reiniciar() }) {
+                            Button(
+                                onClick = { viewModel.reiniciar() },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = TealPastel,
+                                    contentColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
                                 Icon(Icons.Default.Refresh, contentDescription = "Reintentar")
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Reintentar")
@@ -113,29 +135,42 @@ fun SwipeScreen(
                             Text(
                                 "¡Has terminado!",
                                 style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                             Text(
                                 "Has votado todo el contenido disponible",
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Estadísticas
                             Card(
-                                modifier = Modifier.fillMaxWidth(0.8f)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .shadow(
+                                        elevation = 8.dp,
+                                        shape = RoundedCornerShape(20.dp),
+                                        ambientColor = TealPastel.copy(alpha = 0.3f)
+                                    ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = SurfaceLight.copy(alpha = 0.8f)
+                                ),
+                                shape = RoundedCornerShape(20.dp)
                             ) {
                                 Column(
                                     modifier = Modifier.padding(24.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
                                     Text(
                                         "Resumen de votación",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
                                     )
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -144,31 +179,35 @@ fun SwipeScreen(
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 "❤️",
-                                                style = MaterialTheme.typography.headlineMedium
+                                                style = MaterialTheme.typography.displaySmall
                                             )
                                             Text(
                                                 "${uiState.totalLikes}",
-                                                style = MaterialTheme.typography.headlineSmall,
-                                                fontWeight = FontWeight.Bold
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = TealPastel
                                             )
                                             Text(
                                                 "Me gusta",
-                                                style = MaterialTheme.typography.bodySmall
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Color.White.copy(alpha = 0.7f)
                                             )
                                         }
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
                                                 "❌",
-                                                style = MaterialTheme.typography.headlineMedium
+                                                style = MaterialTheme.typography.displaySmall
                                             )
                                             Text(
                                                 "${uiState.totalDislikes}",
-                                                style = MaterialTheme.typography.headlineSmall,
-                                                fontWeight = FontWeight.Bold
+                                                style = MaterialTheme.typography.headlineMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = CinemaRed
                                             )
                                             Text(
                                                 "No me gusta",
-                                                style = MaterialTheme.typography.bodySmall
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Color.White.copy(alpha = 0.7f)
                                             )
                                         }
                                     }
@@ -179,11 +218,18 @@ fun SwipeScreen(
 
                             Button(
                                 onClick = { viewModel.reiniciar() },
-                                modifier = Modifier.fillMaxWidth(0.6f)
+                                modifier = Modifier
+                                    .fillMaxWidth(0.6f)
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = TealPastel,
+                                    contentColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Icon(Icons.Default.Refresh, contentDescription = "Reiniciar")
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Volver a empezar")
+                                Text("Volver a empezar", style = MaterialTheme.typography.titleMedium)
                             }
                         }
                     }
@@ -211,7 +257,7 @@ fun SwipeScreen(
                             )
                         }
 
-                        // Botones de acción
+                        // Botones de acción con estilo moderno
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -222,8 +268,8 @@ fun SwipeScreen(
                             // Botón NO ME GUSTA
                             FloatingActionButton(
                                 onClick = { viewModel.onSwipeLeft() },
-                                containerColor = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.error,
+                                containerColor = CinemaRed.copy(alpha = 0.2f),
+                                contentColor = CinemaRed,
                                 modifier = Modifier.size(72.dp),
                                 shape = CircleShape
                             ) {
@@ -237,8 +283,8 @@ fun SwipeScreen(
                             // Botón ME GUSTA
                             FloatingActionButton(
                                 onClick = { viewModel.onSwipeRight() },
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.primary,
+                                containerColor = TealPastel,
+                                contentColor = Color.Black,
                                 modifier = Modifier.size(72.dp),
                                 shape = CircleShape
                             ) {
@@ -270,7 +316,7 @@ fun SwipeScreen(
 }
 
 /**
- * Diálogo que se muestra cuando hay un match
+ * Diálogo que se muestra cuando hay un match - Estilo moderno
  */
 @Composable
 fun MatchDialog(
@@ -282,18 +328,35 @@ fun MatchDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-            elevation = CardDefaults.cardElevation(8.dp)
+                .padding(16.dp)
+                .shadow(
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    ambientColor = GlowTeal,
+                    spotColor = GlowTeal
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = SurfaceLight
+            ),
+            shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                TealPastel.copy(alpha = 0.2f),
+                                SurfaceLight,
+                                SurfaceLight
+                            )
+                        )
+                    )
                     .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Emoji o icono de match
+                // Emoji de match
                 Text(
                     text = "🎉",
                     style = MaterialTheme.typography.displayLarge
@@ -303,22 +366,25 @@ fun MatchDialog(
                     text = "¡Es un MATCH!",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = TealPastel
                 )
 
                 Text(
                     text = "Tú y tus amigos coinciden en:",
                     style = MaterialTheme.typography.bodyLarge,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = Color.White.copy(alpha = 0.8f)
                 )
 
                 Card(
+                    modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                        containerColor = SurfaceDark.copy(alpha = 0.6f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -326,14 +392,15 @@ fun MatchDialog(
                             text = contenido.titulo,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            maxLines = 2
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            color = Color.White
                         )
                         if (contenido.anioEstreno > 0) {
                             Text(
                                 text = contenido.anioEstreno.toString(),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = Color.White.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -346,15 +413,32 @@ fun MatchDialog(
                     onClick = onContinuar,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = TealPastel,
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Text("Seguir descubriendo", style = MaterialTheme.typography.titleMedium)
                 }
 
-                // Botón secundario: Ver matches (pendiente)
+                // Botón secundario: Ver matches
                 OutlinedButton(
                     onClick = onVerMatches,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = TealPastel
+                    ),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                TealPastel.copy(alpha = 0.5f),
+                                TealPastel.copy(alpha = 0.3f)
+                            )
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Text("Ver mis matches")
                 }

@@ -3,9 +3,12 @@ package com.example.anacampospi.ui.auth
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -16,6 +19,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.example.anacampospi.R
 import com.example.anacampospi.auth.GoogleSignInHelper
 import com.example.anacampospi.viewModels.AuthViewModel
+import com.example.anacampospi.ui.componentes.*
+import com.example.anacampospi.ui.theme.*
 
 @Composable
 fun LoginPantalla(
@@ -41,6 +51,13 @@ fun LoginPantalla(
     var pass by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var showResetPasswordDialog by remember { mutableStateOf(false) }
+
+    // Animaciones de entrada
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        visible = true
+        vm.resetState()
+    }
 
     // Validaciones
     val emailError = remember(email) {
@@ -64,201 +81,234 @@ fun LoginPantalla(
         }
     }
 
-    // Resetear el estado cuando se entra a la pantalla de login
-    LaunchedEffect(Unit) {
-        vm.resetState()
-    }
-
     LaunchedEffect(state.success) {
         if (state.success) onSuccess()
     }
 
-    Scaffold { padding ->
+    // Fondo con gradiente sutil
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.Black,
+                        Night,
+                        Color.Black
+                    ),
+                    startY = 0f,
+                    endY = 1500f
+                )
+            )
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+                .padding(horizontal = 24.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Logo o título de la app
-            Text(
-                text = "🍿 PopCornTribu",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Text(
-                text = "Descubre películas y series con tus amigos",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Campo de email
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
-                leadingIcon = { Icon(Icons.Default.Email, null) },
-                singleLine = true,
-                isError = emailError != null,
-                supportingText = emailError?.let { { Text(it) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
-                )
-            )
-
-            // Campo de contraseña
-            OutlinedTextField(
-                value = pass,
-                onValueChange = { pass = it },
-                label = { Text("Contraseña") },
-                leadingIcon = { Icon(Icons.Default.Lock, null) },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            if (passwordVisible) Icons.Default.Visibility
-                            else Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar"
+            // Logo con animación de entrada
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(animationSpec = tween(600)) +
+                        slideInVertically(
+                            initialOffsetY = { -100 },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Contenedor del logo con brillo sutil
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .shadow(
+                                elevation = 16.dp,
+                                shape = RoundedCornerShape(24.dp),
+                                ambientColor = GlowTeal,
+                                spotColor = GlowTeal
+                            )
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        TealPastel,
+                                        TealDark
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🍿",
+                            style = MaterialTheme.typography.displayMedium
                         )
                     }
-                },
-                visualTransformation = if (passwordVisible)
-                    VisualTransformation.None
-                else
-                    PasswordVisualTransformation(),
-                singleLine = true,
-                isError = passError != null,
-                supportingText = passError?.let { { Text(it) } },
-                modifier = Modifier.fillMaxWidth(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline
-                )
-            )
 
-            // Botón de "¿Olvidaste tu contraseña?"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(
-                    onClick = { showResetPasswordDialog = true }
-                ) {
                     Text(
-                        "¿Olvidaste tu contraseña?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        text = "PopCornTribu",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = "Descubre películas y series\ncon tus amigos",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
-            // Mensaje de éxito para reset password
-            if (state.resetEmailSent) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Campos de entrada con animación escalonada
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) +
+                        slideInVertically(
+                            initialOffsetY = { 100 },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "✅ Te hemos enviado un correo para recuperar tu contraseña. Revisa tu bandeja de entrada.",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                    // Campo de email
+                    ModernTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = "Correo electrónico",
+                        leadingIcon = Icons.Default.Email,
+                        isError = emailError != null,
+                        supportingText = emailError
                     )
+
+                    // Campo de contraseña
+                    ModernTextField(
+                        value = pass,
+                        onValueChange = { pass = it },
+                        label = "Contraseña",
+                        leadingIcon = Icons.Default.Lock,
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    if (passwordVisible) Icons.Default.Visibility
+                                    else Icons.Default.VisibilityOff,
+                                    contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                                    tint = Color.White.copy(alpha = 0.6f)
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible)
+                            VisualTransformation.None
+                        else
+                            PasswordVisualTransformation(),
+                        isError = passError != null,
+                        supportingText = passError
+                    )
+
+                    // Botón de recuperar contraseña
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        ModernTextButton(
+                            onClick = { showResetPasswordDialog = true },
+                            text = "¿Olvidaste tu contraseña?"
+                        )
+                    }
                 }
             }
 
-            // Mensaje de error (antes de los botones para que sea visible)
+            // Mensajes de estado
+            AnimatedVisibility(visible = state.resetEmailSent) {
+                ModernMessageCard(
+                    message = "✅ Te hemos enviado un correo para recuperar tu contraseña. Revisa tu bandeja de entrada.",
+                    isError = false
+                )
+            }
+
             state.error?.let { error ->
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
+                ModernMessageCard(
+                    message = error,
+                    isError = true
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botones con animación
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 400)) +
+                        slideInVertically(
+                            initialOffsetY = { 100 },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(16.dp)
+                    // Botón de login
+                    ModernButton(
+                        onClick = { vm.login(email.trim(), pass) },
+                        text = "Iniciar sesión",
+                        enabled = !state.loading &&
+                                email.isNotEmpty() &&
+                                pass.isNotEmpty() &&
+                                emailError == null &&
+                                passError == null,
+                        loading = state.loading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    // Divider
+                    ModernDivider(text = "o")
+
+                    // Botón de Google
+                    ModernOutlinedButton(
+                        onClick = {
+                            val intent = GoogleSignInHelper.intent(activity, webClientId)
+                            googleLauncher.launch(intent)
+                        },
+                        text = "Continuar con Google",
+                        enabled = !state.loading,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
 
-            // Botón de login
-            Button(
-                onClick = { vm.login(email.trim(), pass) },
-                enabled = !state.loading &&
-                        email.isNotEmpty() &&
-                        pass.isNotEmpty() &&
-                        emailError == null &&
-                        passError == null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                if (state.loading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Iniciar sesión", style = MaterialTheme.typography.titleMedium)
-                }
-            }
-
-            // Divider con "o"
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f))
-                Text(
-                    text = "  o  ",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f))
-            }
-
-            // Botón de Google
-            OutlinedButton(
-                onClick = {
-                    val intent = GoogleSignInHelper.intent(activity, webClientId)
-                    googleLauncher.launch(intent)
-                },
-                enabled = !state.loading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Continuar con Google")
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             // Link a registro
-            TextButton(
-                onClick = onGoToRegister,
-                modifier = Modifier.fillMaxWidth()
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(animationSpec = tween(600, delayMillis = 600))
             ) {
-                Text("¿No tienes cuenta? Regístrate")
+                ModernTextButton(
+                    onClick = onGoToRegister,
+                    text = "¿No tienes cuenta? Regístrate",
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -290,45 +340,56 @@ fun ResetPasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = SurfaceLight,
+        shape = RoundedCornerShape(24.dp),
         title = {
             Text(
                 "Recuperar contraseña",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         },
         text = {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
                     "Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = Color.White.copy(alpha = 0.7f)
                 )
 
-                OutlinedTextField(
+                ModernTextField(
                     value = resetEmail,
                     onValueChange = { resetEmail = it },
-                    label = { Text("Correo electrónico") },
-                    leadingIcon = { Icon(Icons.Default.Email, null) },
-                    singleLine = true,
+                    label = "Correo electrónico",
+                    leadingIcon = Icons.Default.Email,
                     isError = emailError != null,
-                    supportingText = emailError?.let { { Text(it) } },
-                    modifier = Modifier.fillMaxWidth()
+                    supportingText = emailError
                 )
             }
         },
         confirmButton = {
             Button(
                 onClick = { onConfirm(resetEmail.trim()) },
-                enabled = resetEmail.isNotEmpty() && emailError == null
+                enabled = resetEmail.isNotEmpty() && emailError == null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TealPastel,
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Enviar")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.White.copy(alpha = 0.7f)
+                )
+            ) {
                 Text("Cancelar")
             }
         }

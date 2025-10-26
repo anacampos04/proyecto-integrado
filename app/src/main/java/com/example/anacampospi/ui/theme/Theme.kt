@@ -18,9 +18,9 @@ private val LightColors = lightColorScheme(
     onPrimaryContainer = TealDark,
 
     secondary      = PopcornYellow,
-    onSecondary    = OutlineBrown,
+    onSecondary    = Color.Black,
     secondaryContainer = PopcornYellow.copy(alpha = .18f),
-    onSecondaryContainer = OutlineBrown,
+    onSecondaryContainer = YellowDeep,
 
     tertiary       = CinemaRed,
     onTertiary     = Color.White,
@@ -29,13 +29,13 @@ private val LightColors = lightColorScheme(
 
     surface        = Mist,
     onSurface      = Ink,
-    surfaceVariant = Cream,
-    onSurfaceVariant = OutlineBrown,
+    surfaceVariant = Color(0xFFE8E8E8),
+    onSurfaceVariant = Color(0xFF5A5A5A),
 
     background     = Mist,
     onBackground   = Ink,
 
-    outline        = OutlineBrown,
+    outline        = Color(0xFFC0C0C0),
     outlineVariant = Cream
 )
 
@@ -47,24 +47,24 @@ private val DarkColors = darkColorScheme(
 
     secondary      = YellowDeep,
     onSecondary    = Color.Black,
-    secondaryContainer = OutlineBrown,
-    onSecondaryContainer = Color.White,
+    secondaryContainer = Color(0xFF2A2A2A),
+    onSecondaryContainer = PopcornYellow,
 
     tertiary       = RedDeep,
     onTertiary     = Color.White,
-    tertiaryContainer = OutlineBrown,
-    onTertiaryContainer = Color.White,
+    tertiaryContainer = Color(0xFF2A2A2A),
+    onTertiaryContainer = CinemaRed,
 
     surface        = Night,
     onSurface      = Color(0xFFEAEAEA),
-    surfaceVariant = OutlineBrown,
-    onSurfaceVariant = Cream,
+    surfaceVariant = Color(0xFF2A2A2A),
+    onSurfaceVariant = Color(0xFFB0B0B0),
 
     background     = Night,
     onBackground   = Color(0xFFEAEAEA),
 
-    outline        = Cream,
-    outlineVariant = OutlineBrown
+    outline        = Color(0xFF555555),
+    outlineVariant = Color(0xFF3A3A3A)
 )
 
 /**
