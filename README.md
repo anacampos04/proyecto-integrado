@@ -64,12 +64,12 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 
 **Tareas:**
 - [x] Configuración de Firebase (Auth + Firestore)
-- [ ] Creación de pantallas de inicio de sesión y registro  
+- [x] Creación de pantallas de inicio de sesión y registro  
 - [x] Guardado de datos de usuario en Firestore  
 - [x] Obtener contenido de la API  
 - [x] Swipe funcional  
 - [x] Guardado de likes/dislikes  
-- [ ] Documentación v2
+- [x] Documentación v2
 
 **Entrega quincenal:**  
 - ✅ Login/registro  
@@ -83,10 +83,10 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **🎯 Objetivo:** Amigos y detalles de contenido  
 
 **Tareas:**
-- [ ] Implementación de búsqueda de amigos  
-- [ ] Creación de pantalla de amigos  
-- [ ] Pantalla de detalles del contenido  
-- [ ] Ver rondas  
+- [x] Implementación de búsqueda de amigos  
+- [x] Creación de pantalla de amigos  
+- [x] Pantalla de detalles del contenido  (configuradion de ronda)
+- [x] Ver rondas  
 - [ ] Documentación v3  
 
 **Entrega quincenal:**  
@@ -101,7 +101,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 
 **Tareas:**
 - [ ] Pantalla de matches  
-- [ ] Detectar matches  
+- [x] Detectar matches  
 - [ ] Documentación v4  
 - [ ] Pulir diseño general  
 

@@ -1,0 +1,107 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "solicitudesAmistad",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "para",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "estado",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "solicitudesAmistad",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "de",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "estado",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "solicitudesAmistad",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "de",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "para",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "estado",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "votos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "idUsuario",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "idContenido",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "votos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "idUsuario",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "voto",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "votos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "idContenido",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "voto",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "grupos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "miembros",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "creadoEn",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

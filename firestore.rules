@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== USUARIOS =====
+    // - Cualquier usuario autenticado puede LEER perfiles (necesario para búsqueda de amigos)
+    // - Solo el propietario puede CREAR/ELIMINAR su documento
+    // - Updates: el propietario puede actualizar TODO, otros solo pueden modificar el array 'amigos'
+    match /usuarios/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (
+        // El propietario puede actualizar su propio documento completamente
+        request.auth.uid == userId ||
+        // Permitir añadir/eliminar en el array 'amigos' (para operaciones bidireccionales)
+        // Solo se puede modificar el campo 'amigos'
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['amigos'])
+      );
+    }
+
+    // ===== SOLICITUDES DE AMISTAD =====
+    // - El remitente puede crear solicitudes
+    // - El destinatario puede leer y actualizar (aceptar/rechazar) sus solicitudes
+    // - El remitente puede leer sus solicitudes enviadas
+    // - Permitir queries para verificar solicitudes existentes
+    match /solicitudesAmistad/{solicitudId} {
+      allow create: if request.auth != null && request.resource.data.de == request.auth.uid;
+
+      // Permitir leer documentos específicos si eres el remitente o destinatario
+      allow get: if request.auth != null && (
+        resource.data.de == request.auth.uid ||
+        resource.data.para == request.auth.uid
+      );
+
+      // Permitir queries/list - esto es necesario para verificar solicitudes existentes
+      allow list: if request.auth != null;
+
+      // Permitir update si:
+      // 1. Eres el destinatario (para aceptar/rechazar)
+      // 2. Eres el remitente Y solo modificas el estado a ACEPTADA (aceptación automática)
+      allow update: if request.auth != null && (
+        resource.data.para == request.auth.uid ||
+        (resource.data.de == request.auth.uid &&
+         request.resource.data.estado == 'ACEPTADA')
+      );
+
+      allow delete: if request.auth != null && (
+        resource.data.de == request.auth.uid ||
+        resource.data.para == request.auth.uid
+      );
+    }
+
+    // ===== GRUPOS / RONDAS =====
+    // - Cualquier usuario autenticado puede CREAR grupos
+    // - Solo los MIEMBROS pueden LEER el grupo
+    // - ACTUALIZAR: el creador puede actualizar todo, los miembros pueden actualizar su configuración
+    // - Solo el CREADOR puede ELIMINAR el grupo
+    match /grupos/{groupId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && request.auth.uid in resource.data.miembros;
+      allow update: if request.auth != null && (
+        // El creador puede actualizar todo
+        request.auth.uid == resource.data.creadoPor ||
+        // Los miembros pueden actualizar solo su configuración y los filtros/estado cuando todos configuren
+        (request.auth.uid in resource.data.miembros &&
+         // Verificar que solo se modifican campos permitidos
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['configuraciones', 'estado', 'filtros', 'filtrosActualizadosEn']))
+      );
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creadoPor;
+
+      // Votos dentro de grupos (subcolecci\u00f3n)
+      match /votos/{voteId} {
+        allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
+        allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
+        allow update: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+        allow delete: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+      }
+
+      // Matches dentro de grupos (subcolecci\u00f3n)
+      match /matches/{matchId} {
+        allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
+        allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
+        allow update: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.creadoPor;
+      }
+    }
+
+    // ===== VOTOS GLOBALES (opcional, si se usan) =====
+    // - Los usuarios pueden crear y leer votos
+    // - Solo el propietario puede actualizar/eliminar sus votos
+    match /votos/{votoId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+    }
+  }
+}

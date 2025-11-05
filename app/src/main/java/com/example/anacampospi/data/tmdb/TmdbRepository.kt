@@ -77,7 +77,8 @@ class TmdbRepository(private val apiService: TmdbApiService) {
             val content = mutableListOf<ContenidoLite>()
 
             val platformsParam = plataformas?.joinToString("|")
-            val genresParam = generos?.joinToString(",")
+            // Usar "|" para unión (OR) de géneros, no "," que es intersección (AND)
+            val genresParam = generos?.joinToString("|")
 
             when (tipo) {
                 TipoContenido.PELICULA -> {

@@ -80,8 +80,11 @@ fun RegistroPantalla(
             passError == null &&
             confirmPassError == null
 
+    // Navegar cuando el registro sea exitoso
     LaunchedEffect(state.success) {
-        if (state.success) onSuccess()
+        if (state.success) {
+            onSuccess()
+        }
     }
 
     // Fondo con gradiente sutil

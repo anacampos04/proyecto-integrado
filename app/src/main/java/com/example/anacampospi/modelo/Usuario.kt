@@ -12,7 +12,6 @@ data class Usuario(
     val idUsuario: String = "",
     val correo: String = "",
     val nombre: String = "",
-    // fotoUrl eliminado - no usamos Firebase Storage
     val codigoInvitacion: String = "",
     val plataformas: List<String> = emptyList(), // plataformas que tiene el usuario
     val region: String = "ES",

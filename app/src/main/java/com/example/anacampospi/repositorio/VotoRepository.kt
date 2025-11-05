@@ -131,36 +131,38 @@ class VotoRepository {
     }
 
     /**
-     * Verifica si hay un match para un contenido específico
-     * Un match ocurre cuando un AMIGO también dio like al mismo contenido
+     * Verifica si hay un match para un contenido específico en un grupo.
+     * Un match ocurre cuando TODOS los miembros del grupo dieron like al mismo contenido.
      * @param idUsuario ID del usuario actual
      * @param idContenido ID del contenido votado
-     * @param idsAmigos Lista de IDs de amigos del usuario. Si está vacía, no hay match posible.
+     * @param todosMiembrosGrupo Lista de IDs de TODOS los miembros del grupo (incluyendo al usuario actual)
      */
     suspend fun verificarMatch(
         idUsuario: String,
         idContenido: String,
-        idsAmigos: List<String>
+        todosMiembrosGrupo: List<String>
     ): Result<Boolean> {
         return try {
-            // Si no tiene amigos, no puede haber match
-            if (idsAmigos.isEmpty()) {
+            // Si no hay grupo, no puede haber match
+            if (todosMiembrosGrupo.isEmpty()) {
                 return Result.success(false)
             }
 
-            // Buscar amigos que dieron like al mismo contenido
+            // Buscar TODOS los votos de ME_GUSTA para este contenido
             val snapshot = votosCollection
                 .whereEqualTo("idContenido", idContenido)
                 .whereEqualTo("voto", ValorVoto.ME_GUSTA)
                 .get()
                 .await()
 
-            // Verificar si hay al menos un voto de un amigo (no del usuario actual)
-            val hayMatch = snapshot.documents.any { doc ->
-                val voto = doc.toObject(Voto::class.java)
-                voto?.idUsuario != null &&
-                voto.idUsuario != idUsuario &&
-                idsAmigos.contains(voto.idUsuario)
+            // Obtener los IDs de usuarios que votaron ME_GUSTA
+            val usuariosQueVotaronLike = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Voto::class.java)?.idUsuario
+            }.toSet()
+
+            // MATCH solo si TODOS los miembros del grupo votaron ME_GUSTA
+            val hayMatch = todosMiembrosGrupo.all { miembroId ->
+                usuariosQueVotaronLike.contains(miembroId)
             }
 
             Result.success(hayMatch)

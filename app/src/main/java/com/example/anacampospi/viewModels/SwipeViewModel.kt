@@ -6,9 +6,11 @@ import com.example.anacampospi.BuildConfig
 import com.example.anacampospi.data.tmdb.TmdbClient
 import com.example.anacampospi.data.tmdb.TmdbRepository
 import com.example.anacampospi.modelo.ContenidoLite
+import com.example.anacampospi.modelo.Grupo
 import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.modelo.enums.ValorVoto
 import com.example.anacampospi.repositorio.AuthRepository
+import com.example.anacampospi.repositorio.GrupoRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.repositorio.VotoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +19,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel para gestionar la sesión de swipe
+ * ViewModel para gestionar la sesión de swipe.
+ * Soporta dos modos:
+ * - Con grupoId: usa los filtros combinados del grupo (unión de configuraciones)
+ * - Sin grupoId: usa los filtros pasados manualmente (compatibilidad)
  */
 class SwipeViewModel : ViewModel() {
 
@@ -25,6 +30,7 @@ class SwipeViewModel : ViewModel() {
     private val votoRepository = VotoRepository()
     private val authRepository = AuthRepository()
     private val usuarioRepository = UsuarioRepository()
+    private val grupoRepository = GrupoRepository()
 
     private val _uiState = MutableStateFlow(SwipeUiState())
     val uiState: StateFlow<SwipeUiState> = _uiState.asStateFlow()
@@ -40,8 +46,65 @@ class SwipeViewModel : ViewModel() {
     private var filtroGeneros: List<Int>? = null
     private var filtroMinRating: Double? = null
 
+    // ID del grupo (si se está usando modo grupo)
+    private var currentGrupoId: String? = null
+
+    // Miembros del grupo actual (para verificar matches)
+    private var miembrosGrupo: List<String> = emptyList()
+
     /**
-     * Carga contenido inicial con filtros
+     * Inicializa el ViewModel con un grupo.
+     * Carga el grupo y aplica sus filtros combinados.
+     */
+    fun inicializarConGrupo(grupoId: String) {
+        currentGrupoId = grupoId
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(loading = true, error = null)
+
+            val result = grupoRepository.obtenerGrupo(grupoId)
+            result.onSuccess { grupo ->
+                // VERIFICAR QUE LA RONDA ESTÉ ACTIVA
+                if (grupo.estado != "ACTIVA") {
+                    _uiState.value = _uiState.value.copy(
+                        loading = false,
+                        error = "⏳ La ronda aún no está lista.\n\nEsperando a que todos configuren sus preferencias."
+                    )
+                    return@onSuccess
+                }
+
+                // Guardar los miembros del grupo para verificar matches
+                miembrosGrupo = grupo.miembros
+
+                // Usar los filtros del grupo (ya tienen la unión de todas las configuraciones)
+                val tipos = grupo.filtros.tipos
+                val plataformas = grupo.filtros.plataformas
+                val generos = grupo.filtros.generos
+
+                // Determinar el tipo para la API:
+                // - Si solo hay un tipo, usarlo
+                // - Si hay ambos o ninguno, usar null (carga ambos)
+                val tipoApi = when {
+                    tipos.size == 1 -> tipos.first()
+                    else -> null
+                }
+
+                cargarContenido(
+                    tipo = tipoApi,
+                    plataformas = plataformas.ifEmpty { null },
+                    generos = generos.ifEmpty { null }
+                )
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    loading = false,
+                    error = "Error al cargar el grupo: ${error.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Carga contenido inicial con filtros (método manual para compatibilidad)
      */
     fun cargarContenido(
         tipo: TipoContenido? = null,
@@ -187,32 +250,32 @@ class SwipeViewModel : ViewModel() {
     }
 
     /**
-     * Verifica si hay un match para el contenido dado
-     * Solo verifica entre amigos del usuario
+     * Verifica si hay un match para el contenido dado.
+     * Un match ocurre cuando TODOS los miembros del grupo votaron ME_GUSTA.
      */
     private fun verificarMatch(contenido: ContenidoLite) {
         viewModelScope.launch {
             val uid = authRepository.currentUid() ?: return@launch
 
-            // Obtener la lista de amigos del usuario
-            val usuarioResult = usuarioRepository.getUsuario(uid)
-            val idsAmigos = usuarioResult.getOrNull()?.amigos ?: emptyList()
-
-            // Si no tiene amigos, no puede haber match
-            if (idsAmigos.isEmpty()) {
-                android.util.Log.d("SwipeViewModel", "No hay amigos, no se verifica match")
+            // Si no hay grupo o no hay miembros, no puede haber match
+            if (miembrosGrupo.isEmpty()) {
+                android.util.Log.d("SwipeViewModel", "No hay grupo configurado, no se verifica match")
                 return@launch
             }
 
-            val result = votoRepository.verificarMatch(uid, contenido.idContenido, idsAmigos)
+            android.util.Log.d("SwipeViewModel", "Verificando match con miembros del grupo: $miembrosGrupo")
+
+            val result = votoRepository.verificarMatch(uid, contenido.idContenido, miembrosGrupo)
 
             result.onSuccess { hayMatch ->
                 if (hayMatch) {
-                    android.util.Log.d("SwipeViewModel", "¡MATCH encontrado con un amigo! ${contenido.titulo}")
+                    android.util.Log.d("SwipeViewModel", "¡MATCH! TODOS los miembros votaron ME_GUSTA: ${contenido.titulo}")
                     _uiState.value = _uiState.value.copy(
                         hayMatch = true,
                         contenidoMatch = contenido
                     )
+                } else {
+                    android.util.Log.d("SwipeViewModel", "No hay match aún. Esperando a que todos voten.")
                 }
             }
 

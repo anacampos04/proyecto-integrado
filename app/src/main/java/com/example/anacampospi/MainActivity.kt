@@ -6,8 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,14 +24,14 @@ import com.example.anacampospi.ui.auth.RegistroPantalla
 // VERSIÓN ACTUAL: V1 (navbar con curva elegante)
 import com.example.anacampospi.ui.componentes.CurvedBottomNavigation
 import com.example.anacampospi.ui.componentes.DefaultNavItems
+import com.example.anacampospi.ui.amigos.AmigosScreen
 import com.example.anacampospi.ui.config.ConfiguracionRondaScreen
+import com.example.anacampospi.ui.home.HomeScreen
 import com.example.anacampospi.ui.matches.MatchesScreen
 import com.example.anacampospi.ui.perfil.PerfilScreen
-import com.example.anacampospi.ui.setup.SetupInicialScreen
 import com.example.anacampospi.ui.swipe.SwipeScreen
 import com.example.anacampospi.ui.theme.PopCornTribuTheme
 import com.example.anacampospi.viewModels.AuthViewModel
-import com.example.anacampospi.viewModels.SetupViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -50,93 +52,68 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     val nav = rememberNavController()
     val authVm: AuthViewModel = viewModel()
-    val setupVm: SetupViewModel = viewModel()
-
-    // Estado para guardar la configuración de la ronda
-    var configPlataformas by remember { mutableStateOf<List<String>?>(null) }
-    var configTipo by remember { mutableStateOf<com.example.anacampospi.modelo.enums.TipoContenido?>(null) }
-    var configGeneros by remember { mutableStateOf<List<Int>?>(null) }
 
     // Determinar inicio basado en si hay sesión activa
     val currentUser = FirebaseAuth.getInstance().currentUser
-    val startDestination = if (currentUser != null) "checkSetup" else "login"
+    val startDestination = if (currentUser != null) "mainScreen" else "login"
 
     NavHost(navController = nav, startDestination = startDestination) {
         composable("login") {
-            // No auto-navegar desde login, solo cuando el usuario hace login exitoso
-            LoginPantalla(
-                vm = authVm,
-                onSuccess = {
-                    // Después del login, verificar si necesita setup
-                    nav.navigate("checkSetup") {
-                        popUpTo("login") { inclusive = true }
+            // Verificar que NO haya sesión activa
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                // Si hay sesión, ir a mainScreen
+                LaunchedEffect(Unit) {
+                    nav.navigate("mainScreen") {
+                        popUpTo(0) { inclusive = true }
                     }
-                },
-                onGoToRegister = { nav.navigate("register") }
-            )
+                }
+            } else {
+                LoginPantalla(
+                    vm = authVm,
+                    onSuccess = {
+                        // Después del login, ir directamente a mainScreen
+                        nav.navigate("mainScreen") {
+                            popUpTo(0) { inclusive = true } // Limpiar todo el stack
+                        }
+                    },
+                    onGoToRegister = { nav.navigate("register") }
+                )
+            }
         }
 
         composable("register") {
             RegistroPantalla(
                 vm = authVm,
                 onSuccess = {
-                    // Después del registro, siempre ir a setup
-                    nav.navigate("setup") {
-                        popUpTo("register") { inclusive = true }
+                    // Después del registro, ir directamente a mainScreen
+                    nav.navigate("mainScreen") {
+                        popUpTo(0) { inclusive = true } // Limpiar todo el stack
                     }
                 },
                 onGoToLogin = { nav.popBackStack() }
             )
         }
 
-        composable("checkSetup") {
-            CheckSetupScreen(
-                onSetupNeeded = {
-                    nav.navigate("setup") {
-                        popUpTo("checkSetup") { inclusive = true }
-                    }
-                },
-                onSetupComplete = {
-                    nav.navigate("mainScreen") {
-                        popUpTo("checkSetup") { inclusive = true }
-                    }
-                },
-                onNotAuthenticated = {
-                    // Si llegó aquí sin autenticación, volver a login
-                    nav.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
-        }
-
-        composable("setup") {
-            SetupInicialScreen(
-                vm = setupVm,
-                onComplete = {
-                    nav.navigate("mainScreen") {
-                        popUpTo("setup") { inclusive = true }
-                    }
-                }
-            )
-        }
-
         composable("mainScreen") {
-            MainScreenWithNavigation(
-                configPlataformas = configPlataformas,
-                configTipo = configTipo,
-                configGeneros = configGeneros,
-                onConfigChanged = { plataformas, tipo, generos ->
-                    configPlataformas = plataformas
-                    configTipo = tipo
-                    configGeneros = generos
-                },
-                onLogout = {
+            // Verificar que SÍ haya sesión activa
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user == null) {
+                // Si NO hay sesión, ir a login
+                LaunchedEffect(Unit) {
                     nav.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 }
-            )
+            } else {
+                MainScreenWithNavigation(
+                    onLogout = {
+                        nav.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -146,15 +123,19 @@ fun AppNavigation() {
  */
 @Composable
 fun MainScreenWithNavigation(
-    configPlataformas: List<String>?,
-    configTipo: com.example.anacampospi.modelo.enums.TipoContenido?,
-    configGeneros: List<Int>?,
-    onConfigChanged: (List<String>, com.example.anacampospi.modelo.enums.TipoContenido?, List<Int>) -> Unit,
     onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route ?: "home"
+    val actualRoute = navBackStackEntry?.destination?.route ?: "home"
+
+    // Mapear rutas internas a rutas de la navbar
+    // Cuando estamos en configurarRonda o swipe/{grupoId}, marcar "swipe" en la navbar
+    val currentRoute = when {
+        actualRoute == "configurarRonda" -> "swipe"
+        actualRoute.startsWith("swipe/") -> "swipe"
+        else -> actualRoute
+    }
 
     Scaffold(
         bottomBar = {
@@ -178,20 +159,82 @@ fun MainScreenWithNavigation(
                 startDestination = "home"
             ) {
                 composable("home") {
-                    ConfiguracionRondaScreen(
-                        onIniciarRonda = { plataformas, tipo, generos ->
-                            onConfigChanged(plataformas, tipo, generos)
-                            navController.navigate("swipe")
+                    HomeScreen(
+                        onNuevaRonda = {
+                            navController.navigate("configurarRonda")
+                        },
+                        onGrupoClick = { grupoId ->
+                            navController.navigate("swipe/$grupoId")
+                        },
+                        onConfigurarRonda = { grupoId ->
+                            navController.navigate("configurarRonda/$grupoId")
                         }
                     )
                 }
 
-                composable("swipe") {
-                    SwipeScreen(
-                        plataformas = configPlataformas,
-                        tipo = configTipo,
-                        generos = configGeneros
+                composable("configurarRonda") {
+                    ConfiguracionRondaScreen(
+                        grupoId = null, // Modo creador
+                        onIniciarRonda = { grupoId, irASwipes ->
+                            if (irASwipes) {
+                                // Ir directamente a swipes
+                                navController.navigate("swipe/$grupoId") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            } else {
+                                // Volver a Home para ver el estado de la ronda
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            }
+                        }
                     )
+                }
+
+                composable("configurarRonda/{grupoId}") { backStackEntry ->
+                    val grupoId = backStackEntry.arguments?.getString("grupoId")
+                    ConfiguracionRondaScreen(
+                        grupoId = grupoId, // Modo invitado
+                        onIniciarRonda = { id, irASwipes ->
+                            if (irASwipes) {
+                                // Ir directamente a swipes (último en configurar)
+                                navController.navigate("swipe/$id") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            } else {
+                                // Volver a Home para ver el estado de la ronda
+                                navController.navigate("home") {
+                                    popUpTo("home") { inclusive = true }
+                                }
+                            }
+                        }
+                    )
+                }
+
+                composable("swipe/{grupoId}") { backStackEntry ->
+                    val grupoId = backStackEntry.arguments?.getString("grupoId")
+                    SwipeScreen(
+                        grupoId = grupoId,
+                        onBack = {
+                            // Volver a home cuando el usuario sale de swipes
+                            navController.navigate("home") {
+                                popUpTo("home") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                composable("amigos") {
+                    AmigosScreen()
+                }
+
+                composable("swipe") {
+                    // Ruta temporal para compatibilidad - redirige a config
+                    LaunchedEffect(Unit) {
+                        navController.navigate("configurarRonda") {
+                            popUpTo("swipe") { inclusive = true }
+                        }
+                    }
                 }
 
                 composable("matches") {
@@ -205,56 +248,6 @@ fun MainScreenWithNavigation(
                 }
             }
         }
-    }
-}
-
-/**
- * Pantalla intermedia que verifica si el usuario necesita completar el setup inicial
- */
-@Composable
-fun CheckSetupScreen(
-    onSetupNeeded: () -> Unit,
-    onSetupComplete: () -> Unit,
-    onNotAuthenticated: () -> Unit = {}
-) {
-    val authRepo = remember { AuthRepository() }
-    val usuarioRepo = remember { UsuarioRepository() }
-
-    LaunchedEffect(Unit) {
-        // Verificar directamente si hay usuario autenticado en Firebase
-        val currentUser = FirebaseAuth.getInstance().currentUser
-
-        if (currentUser == null) {
-            // Si no hay usuario autenticado, esto no debería pasar
-            // pero si pasa, volver a setup (o login si se implementa)
-            onNotAuthenticated()
-            return@LaunchedEffect
-        }
-
-        val uid = currentUser.uid
-
-        val resultado = usuarioRepo.getUsuario(uid)
-        resultado.onSuccess { usuario ->
-            // Si el usuario no tiene plataformas configuradas, necesita setup
-            if (usuario.plataformas.isEmpty()) {
-                onSetupNeeded()
-            } else {
-                onSetupComplete()
-            }
-        }
-
-        resultado.onFailure {
-            // En caso de error, ir a setup por seguridad
-            onSetupNeeded()
-        }
-    }
-
-    // Mostrar un loading mientras se verifica
-    androidx.compose.foundation.layout.Box(
-        modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-        contentAlignment = androidx.compose.ui.Alignment.Center
-    ) {
-        androidx.compose.material3.CircularProgressIndicator()
     }
 }
 

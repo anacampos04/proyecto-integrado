@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,25 +31,51 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.data.tmdb.models.TmdbGenres
 import com.example.anacampospi.modelo.PlataformasCatalogo
+import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.ui.componentes.*
 import com.example.anacampospi.ui.theme.*
+import com.example.anacampospi.viewModels.ConfiguracionRondaViewModel
+import kotlinx.coroutines.launch
 
 /**
- * Pantalla de configuración de ronda de swipe
+ * Pantalla de configuración de ronda de swipe.
+ * Soporta dos modos:
+ * - Creador (grupoId = null): configurar nueva ronda con amigos, tipos, plataformas y géneros
+ * - Invitado (grupoId != null): configurar solo plataformas y géneros en ronda existente
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ConfiguracionRondaScreen(
-    onIniciarRonda: (plataformas: List<String>, tipo: TipoContenido?, generos: List<Int>) -> Unit,
-    onBack: () -> Unit = {}
+    grupoId: String? = null, // Si es null, modo creador. Si no, modo invitado.
+    onIniciarRonda: (grupoId: String, irASwipes: Boolean) -> Unit,
+    onBack: () -> Unit = {},
+    viewModel: ConfiguracionRondaViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    var nombreRonda by remember { mutableStateOf("") }
+    var amigosSeleccionados by remember { mutableStateOf(setOf<String>()) }
     var plataformasSeleccionadas by remember { mutableStateOf(setOf<String>()) }
     var peliculasEnabled by remember { mutableStateOf(true) }
     var seriesEnabled by remember { mutableStateOf(true) }
     var generosSeleccionados by remember { mutableStateOf(setOf<Int>()) }
+
+    // Inicializar ViewModel según el modo
+    LaunchedEffect(grupoId) {
+        viewModel.inicializar(grupoId)
+    }
+
+    // Pre-seleccionar las plataformas del usuario cuando se carguen
+    LaunchedEffect(uiState.plataformasUsuario) {
+        if (uiState.plataformasUsuario.isNotEmpty() && plataformasSeleccionadas.isEmpty()) {
+            plataformasSeleccionadas = uiState.plataformasUsuario.toSet()
+        }
+    }
 
     // Animación de entrada
     var visible by remember { mutableStateOf(false) }
@@ -56,12 +83,20 @@ fun ConfiguracionRondaScreen(
         visible = true
     }
 
-    // Determinar tipo de contenido basado en switches
-    val tipoSeleccionado = when {
-        peliculasEnabled && seriesEnabled -> null // Ambos
-        peliculasEnabled -> TipoContenido.PELICULA
-        seriesEnabled -> TipoContenido.SERIE
-        else -> null // Si ambos están desactivados, permitir ambos por defecto
+    // Determinar tipos de contenido basado en switches
+    // El creador puede elegir: solo películas, solo series, o ambos
+    val tiposSeleccionados = buildList {
+        if (peliculasEnabled) add(TipoContenido.PELICULA)
+        if (seriesEnabled) add(TipoContenido.SERIE)
+    }.takeIf { it.isNotEmpty() } ?: listOf(TipoContenido.PELICULA) // Por defecto películas si ninguno está activo
+
+    // Validar que el botón pueda estar habilitado
+    val puedeIniciarRonda = if (uiState.esInvitado) {
+        // Invitado: solo necesita plataformas (géneros son opcionales)
+        plataformasSeleccionadas.isNotEmpty()
+    } else {
+        // Creador: necesita amigos y plataformas (géneros son opcionales)
+        amigosSeleccionados.isNotEmpty() && plataformasSeleccionadas.isNotEmpty()
     }
 
     Box(
@@ -91,12 +126,21 @@ fun ConfiguracionRondaScreen(
                         .background(Color.Black.copy(alpha = 0.4f))
                         .padding(horizontal = 16.dp, vertical = 16.dp)
                 ) {
-                    Text(
-                        text = "Configurar ronda",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
+                    Column {
+                        Text(
+                            text = if (uiState.esInvitado) "Configurar mis preferencias" else "Configurar ronda",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        if (uiState.esInvitado && uiState.grupo != null) {
+                            Text(
+                                text = uiState.grupo!!.nombre,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -108,6 +152,85 @@ fun ConfiguracionRondaScreen(
                     .padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
+                // Sección de nombre personalizado (solo para creador)
+                if (!uiState.esInvitado) {
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600, delayMillis = 50)) +
+                                slideInVertically(initialOffsetY = { 50 })
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(
+                                text = "Nombre de la ronda (opcional)",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Elige un nombre único para esta sesión",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+
+                            OutlinedTextField(
+                                value = nombreRonda,
+                                onValueChange = { if (it.length <= 30) nombreRonda = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text("Ej: Noche de Terror, Comedias Románticas...") },
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = TealPastel,
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White,
+                                    cursorColor = TealPastel,
+                                    focusedPlaceholderColor = Color.White.copy(alpha = 0.5f),
+                                    unfocusedPlaceholderColor = Color.White.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                    }
+
+                    // Divider
+                    AnimatedVisibility(visible = visible) {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Color.White.copy(alpha = 0.1f)
+                        )
+                    }
+                }
+
+                // Sección de selección de amigos (solo para creador)
+                if (!uiState.esInvitado) {
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600, delayMillis = 100)) +
+                                slideInVertically(initialOffsetY = { 50 })
+                    ) {
+                        SelectorAmigosSection(
+                            amigos = uiState.amigos,
+                            amigosSeleccionados = amigosSeleccionados,
+                            onAmigoToggle = { uid ->
+                                amigosSeleccionados = if (amigosSeleccionados.contains(uid)) {
+                                    amigosSeleccionados - uid
+                                } else {
+                                    amigosSeleccionados + uid
+                                }
+                            },
+                            cargando = uiState.cargandoAmigos
+                        )
+                    }
+
+                    // Divider
+                    AnimatedVisibility(visible = visible) {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Color.White.copy(alpha = 0.1f)
+                        )
+                    }
+                }
+
                 // Sección de plataformas
                 AnimatedVisibility(
                     visible = visible,
@@ -122,7 +245,10 @@ fun ConfiguracionRondaScreen(
                             color = Color.White
                         )
                         Text(
-                            text = "Selecciona al menos una plataforma",
+                            text = if (uiState.esInvitado)
+                                "Tus plataformas están pre-seleccionadas, pero puedes cambiarlas"
+                            else
+                                "Tus plataformas están pre-seleccionadas, pero puedes cambiarlas",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.7f)
                         )
@@ -162,119 +288,121 @@ fun ConfiguracionRondaScreen(
                     )
                 }
 
-                // Sección de tipo de contenido con SWITCHES
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) +
-                            slideInVertically(initialOffsetY = { 50 })
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text(
-                            text = "Tipo de contenido",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "Activa los tipos que quieras ver",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
+                // Sección de tipo de contenido con SWITCHES (solo para creador)
+                if (!uiState.esInvitado) {
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) +
+                                slideInVertically(initialOffsetY = { 50 })
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Text(
+                                text = "Tipo de contenido",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Activa los tipos que quieras ver",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
 
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(
-                                    elevation = 4.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    ambientColor = TealPastel.copy(alpha = 0.2f)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        elevation = 4.dp,
+                                        shape = RoundedCornerShape(16.dp),
+                                        ambientColor = TealPastel.copy(alpha = 0.2f)
+                                    ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = SurfaceLight.copy(alpha = 0.6f)
                                 ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = SurfaceLight.copy(alpha = 0.6f)
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                                shape = RoundedCornerShape(16.dp)
                             ) {
-                                // Switch para películas
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Column(
+                                    modifier = Modifier.padding(20.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "🎬 Películas",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color.White
-                                        )
-                                        Text(
-                                            text = "Incluir películas en la ronda",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.White.copy(alpha = 0.6f)
+                                    // Switch para películas
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "🎬 Películas",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = "Incluir películas en la ronda",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                        Switch(
+                                            checked = peliculasEnabled,
+                                            onCheckedChange = { peliculasEnabled = it },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.Black,
+                                                checkedTrackColor = TealPastel,
+                                                uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                                                uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
+                                            )
                                         )
                                     }
-                                    Switch(
-                                        checked = peliculasEnabled,
-                                        onCheckedChange = { peliculasEnabled = it },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = Color.Black,
-                                            checkedTrackColor = TealPastel,
-                                            uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
-                                            uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
-                                        )
+
+                                    HorizontalDivider(
+                                        thickness = 1.dp,
+                                        color = Color.White.copy(alpha = 0.1f)
                                     )
-                                }
 
-                                HorizontalDivider(
-                                    thickness = 1.dp,
-                                    color = Color.White.copy(alpha = 0.1f)
-                                )
-
-                                // Switch para series
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "📺 Series",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color.White
-                                        )
-                                        Text(
-                                            text = "Incluir series en la ronda",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.White.copy(alpha = 0.6f)
+                                    // Switch para series
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "📺 Series",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = "Incluir series en la ronda",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                        Switch(
+                                            checked = seriesEnabled,
+                                            onCheckedChange = { seriesEnabled = it },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.Black,
+                                                checkedTrackColor = TealPastel,
+                                                uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
+                                                uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
+                                            )
                                         )
                                     }
-                                    Switch(
-                                        checked = seriesEnabled,
-                                        onCheckedChange = { seriesEnabled = it },
-                                        colors = SwitchDefaults.colors(
-                                            checkedThumbColor = Color.Black,
-                                            checkedTrackColor = TealPastel,
-                                            uncheckedThumbColor = Color.White.copy(alpha = 0.6f),
-                                            uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
-                                        )
-                                    )
                                 }
                             }
                         }
                     }
-                }
 
-                // Divider moderno
-                AnimatedVisibility(visible = visible) {
-                    HorizontalDivider(
-                        thickness = 1.dp,
-                        color = Color.White.copy(alpha = 0.1f)
-                    )
+                    // Divider moderno
+                    AnimatedVisibility(visible = visible) {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Color.White.copy(alpha = 0.1f)
+                        )
+                    }
                 }
 
                 // Sección de géneros
@@ -321,26 +449,116 @@ fun ConfiguracionRondaScreen(
                     }
                 }
 
+                // Mensaje informativo
+                if (!uiState.esInvitado && amigosSeleccionados.isNotEmpty()) {
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600, delayMillis = 350))
+                    ) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = TealPastel.copy(alpha = 0.15f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "ℹ️",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Column {
+                                    Text(
+                                        text = "Tus amigos recibirán la invitación",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Podrás hacer swipe cuando todos configuren sus preferencias",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Botón al final del contenido (dentro del scroll)
                 AnimatedVisibility(
                     visible = visible,
                     enter = fadeIn(animationSpec = tween(600, delayMillis = 400)) +
                             slideInVertically(initialOffsetY = { 100 })
                 ) {
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Mensaje de validación si no puede iniciar
+                        if (!puedeIniciarRonda && !uiState.esInvitado) {
+                            if (amigosSeleccionados.isEmpty()) {
+                                Text(
+                                    text = "⚠️ Debes seleccionar al menos un amigo para crear la ronda",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PopcornYellow,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                )
+                            } else if (plataformasSeleccionadas.isEmpty()) {
+                                Text(
+                                    text = "⚠️ Debes seleccionar al menos una plataforma",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = PopcornYellow,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 32.dp)
+                                )
+                            }
+                        }
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        // Botón circular con icono de play
+                        // Botón circular con icono
                         FloatingActionButton(
                             onClick = {
-                                onIniciarRonda(
-                                    plataformasSeleccionadas.toList(),
-                                    tipoSeleccionado,
-                                    generosSeleccionados.toList()
-                                )
+                                if (!puedeIniciarRonda || uiState.creandoGrupo) return@FloatingActionButton
+
+                                scope.launch {
+                                    if (uiState.esInvitado && grupoId != null) {
+                                        // Modo invitado: configurar ronda existente
+                                        val result = viewModel.configurarRonda(
+                                            idGrupo = grupoId,
+                                            plataformas = plataformasSeleccionadas.toList(),
+                                            generos = generosSeleccionados.toList()
+                                        )
+                                        if (result.isSuccess) {
+                                            // Verificar si el grupo quedó ACTIVO (último en configurar)
+                                            val grupoActualizado = viewModel.verificarEstadoGrupo(grupoId)
+                                            val irASwipes = grupoActualizado?.estado == "ACTIVA"
+                                            onIniciarRonda(grupoId, irASwipes)
+                                        }
+                                    } else {
+                                        // Modo creador: crear nueva ronda (siempre va a home a esperar)
+                                        val nuevoGrupoId = viewModel.crearGrupo(
+                                            nombrePersonalizado = nombreRonda.trim().ifBlank { null },
+                                            amigosSeleccionados = amigosSeleccionados.toList(),
+                                            plataformas = plataformasSeleccionadas.toList(),
+                                            tipos = tiposSeleccionados,
+                                            generos = generosSeleccionados.toList()
+                                        )
+                                        nuevoGrupoId?.let { onIniciarRonda(it, false) }
+                                    }
+                                }
                             },
                             modifier = Modifier
                                 .size(80.dp)
@@ -350,16 +568,24 @@ fun ConfiguracionRondaScreen(
                                     ambientColor = GlowTeal,
                                     spotColor = GlowTeal
                                 ),
-                            containerColor = TealPastel,
+                            containerColor = if (puedeIniciarRonda && !uiState.creandoGrupo) TealPastel else Color.Gray,
                             contentColor = Color.Black,
                             shape = CircleShape
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Iniciar ronda",
-                                modifier = Modifier.size(40.dp)
-                            )
+                            if (uiState.creandoGrupo) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(40.dp),
+                                    color = Color.Black
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = if (uiState.esInvitado) Icons.Default.Check else Icons.Default.PlayArrow,
+                                    contentDescription = if (uiState.esInvitado) "Guardar configuración" else "Iniciar ronda",
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
                         }
+                    }
                     }
                 }
             }
@@ -507,4 +733,169 @@ private fun GeneroChip(
     onClick: () -> Unit
 ) {
     ModernGeneroChip(nombre, isSelected, onClick)
+}
+
+/**
+ * Sección de selección de amigos para la ronda
+ */
+@Composable
+fun SelectorAmigosSection(
+    amigos: List<Usuario>,
+    amigosSeleccionados: Set<String>,
+    onAmigoToggle: (String) -> Unit,
+    cargando: Boolean
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "Invitar amigos",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Text(
+            text = "Selecciona los amigos que participarán en esta ronda",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.White.copy(alpha = 0.7f)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (cargando) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = PopcornYellow)
+            }
+        } else if (amigos.isEmpty()) {
+            // Estado vacío
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = SurfaceLight.copy(alpha = 0.6f)
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.3f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No tienes amigos aún",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White.copy(alpha = 0.5f),
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Añade amigos desde la pestaña Amigos",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.4f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            // Lista de amigos
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                amigos.forEach { amigo ->
+                    AmigoCheckboxItem(
+                        amigo = amigo,
+                        isSelected = amigosSeleccionados.contains(amigo.idUsuario),
+                        onToggle = { onAmigoToggle(amigo.idUsuario) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Item de amigo con checkbox
+ */
+@Composable
+fun AmigoCheckboxItem(
+    amigo: Usuario,
+    isSelected: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                TealPastel.copy(alpha = 0.2f)
+            else
+                SurfaceLight.copy(alpha = 0.6f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                // Avatar
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(PopcornYellow.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = PopcornYellow,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = amigo.nombre.ifBlank { "Usuario sin nombre" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                    Text(
+                        text = amigo.codigoInvitacion,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.6f)
+                    )
+                }
+            }
+
+            // Checkbox
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggle() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = TealPastel,
+                    uncheckedColor = Color.White.copy(alpha = 0.5f),
+                    checkmarkColor = Color.Black
+                )
+            )
+        }
+    }
 }

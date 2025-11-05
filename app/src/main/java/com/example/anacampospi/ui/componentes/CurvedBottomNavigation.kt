@@ -78,10 +78,11 @@ fun CurvedBottomNavigation(
                     spotShadowColor = GlowTeal
                 }
         ) {
-            val curveWidth = with(density) { 80.dp.toPx() }
-            val curveDepth = with(density) { 20.dp.toPx() }
+            val curveWidth = with(density) { 84.dp.toPx() }
+            val curveDepth = with(density) { 22.dp.toPx() }
             val itemWidth = size.width / items.size
-            val curveCenter = itemWidth * (animatedSelectedIndex + 0.5f)
+            // Ajuste más preciso del centro para mejor alineación visual
+            val curveCenter = itemWidth * animatedSelectedIndex + (itemWidth / 2f)
 
             val path = Path().apply {
                 moveTo(0f, 0f)
@@ -138,7 +139,7 @@ fun CurvedBottomNavigation(
             items.forEachIndexed { index, item ->
                 val isSelected = currentRoute == item.route
                 val offsetY by animateDpAsState(
-                    targetValue = if (isSelected) (-8).dp else 0.dp,
+                    targetValue = if (isSelected) (-10).dp else 0.dp,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
                         stiffness = Spring.StiffnessMediumLow
@@ -261,6 +262,7 @@ private fun NavBarItem(
 object DefaultNavItems {
     val items = listOf(
         CurvedNavItem("home", Icons.Default.Home, "Inicio"),
+        CurvedNavItem("amigos", Icons.Default.People, "Amigos"),
         CurvedNavItem("swipe", Icons.Default.Favorite, "Swipes"),
         CurvedNavItem("matches", Icons.Default.Star, "Matches"),
         CurvedNavItem("perfil", Icons.Default.Person, "Perfil")

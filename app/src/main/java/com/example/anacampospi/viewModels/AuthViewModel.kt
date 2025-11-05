@@ -151,8 +151,8 @@ class AuthViewModel(
         val errorMessage = e.message ?: ""
         return when {
             errorMessage.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) ||
-            errorMessage.contains("invalid-credential", ignoreCase = true) ||
-            errorMessage.contains("invalid-email", ignoreCase = true) ->
+                    errorMessage.contains("invalid-credential", ignoreCase = true) ||
+                    errorMessage.contains("invalid-email", ignoreCase = true) ->
                 "❌ Email o contraseña incorrectos. Por favor, verifica tus datos."
 
             errorMessage.contains("email-already-in-use", ignoreCase = true) ->

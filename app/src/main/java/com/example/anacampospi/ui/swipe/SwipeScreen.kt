@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
@@ -25,24 +26,35 @@ import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.SwipeViewModel
 
 /**
- * Pantalla principal de swipe para votar contenido
+ * Pantalla principal de swipe para votar contenido.
+ * Soporta dos modos:
+ * - Con grupoId: carga los filtros combinados del grupo
+ * - Sin grupoId: usa filtros manuales (compatibilidad)
  */
 @Composable
 fun SwipeScreen(
+    grupoId: String? = null,
     plataformas: List<String>? = null,
     tipo: TipoContenido? = null,
     generos: List<Int>? = null,
+    onBack: () -> Unit = {},
     viewModel: SwipeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Cargar contenido con filtros al iniciar
-    LaunchedEffect(plataformas, tipo, generos) {
-        viewModel.cargarContenido(
-            tipo = tipo,
-            plataformas = plataformas,
-            generos = generos
-        )
+    // Cargar contenido según el modo
+    LaunchedEffect(grupoId, plataformas, tipo, generos) {
+        if (grupoId != null) {
+            // Modo grupo: usar filtros combinados del grupo
+            viewModel.inicializarConGrupo(grupoId)
+        } else {
+            // Modo manual: usar filtros pasados directamente
+            viewModel.cargarContenido(
+                tipo = tipo,
+                plataformas = plataformas,
+                generos = generos
+            )
+        }
     }
 
     Box(
@@ -58,7 +70,7 @@ fun SwipeScreen(
                 )
             )
     ) {
-            when {
+        when {
                 // Estado de carga
                 uiState.loading -> {
                     Box(
@@ -133,13 +145,13 @@ fun SwipeScreen(
                                 style = MaterialTheme.typography.displayLarge
                             )
                             Text(
-                                "¡Has terminado!",
+                                "No hay más contenido",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                "Has votado todo el contenido disponible",
+                                "No hay más películas o series que coincidan con tus filtros, o ya has votado todo el contenido disponible.",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White.copy(alpha = 0.7f),
                                 textAlign = TextAlign.Center
@@ -310,6 +322,30 @@ fun SwipeScreen(
                     // Por ahora solo continuar, la pantalla de matches se implementará después
                     viewModel.continuarDespuesDeMatch()
                 }
+            )
+        }
+
+        // Botón de volver (siempre visible)
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = CircleShape,
+                    ambientColor = Color.Black.copy(alpha = 0.5f)
+                )
+                .background(
+                    color = SurfaceLight.copy(alpha = 0.9f),
+                    shape = CircleShape
+                )
+                .size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Volver",
+                tint = Color.White
             )
         }
     }
