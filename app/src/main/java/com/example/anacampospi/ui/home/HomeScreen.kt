@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.modelo.Grupo
+import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.HomeViewModel
 import java.text.SimpleDateFormat
@@ -321,7 +323,7 @@ fun SeccionRondasActivas(
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Listas para votar (${grupos.size})",
+                text = "Listas para votar",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -367,7 +369,7 @@ fun SeccionRondasPendientes(
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Pendientes de configurar (${grupos.size})",
+                text = "Pendientes de configurar",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = PopcornYellow
@@ -413,7 +415,7 @@ fun SeccionRondasEsperando(
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Esperando a otros (${grupos.size})",
+                text = "Esperando a otros",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.7f)
@@ -444,11 +446,9 @@ fun GrupoItem(
     grupo: Grupo,
     onClick: () -> Unit,
     onEliminar: () -> Unit,
-    badge: String? = null, // Badge opcional: "ACTIVA", "CONFIGURAR", "ESPERANDO"
-    mostrarUsuariosPendientes: Boolean = false // Mostrar quién falta por configurar
+    badge: String? = null,
+    mostrarUsuariosPendientes: Boolean = false
 ) {
-    var mostrarOpciones by remember { mutableStateOf(false) }
-
     val badgeColor = when (badge) {
         "ACTIVA" -> TealPastel
         "CONFIGURAR" -> PopcornYellow
@@ -456,15 +456,19 @@ fun GrupoItem(
         else -> Color.Transparent
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = SurfaceLight.copy(alpha = 0.6f)
-        ),
-        shape = RoundedCornerShape(16.dp)
+    SwipeToDismissItem(
+        onDelete = onEliminar,
+        cornerRadius = 16.dp
     ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A)
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -490,7 +494,7 @@ fun GrupoItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.People,
+                        Icons.Filled.Groups,
                         contentDescription = null,
                         tint = Color.Black,
                         modifier = Modifier.size(24.dp)
@@ -569,33 +573,7 @@ fun GrupoItem(
                     }
                 }
             }
-
-            // Botón de opciones
-            Box {
-                IconButton(onClick = { mostrarOpciones = true }) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "Opciones",
-                        tint = Color.White.copy(alpha = 0.7f)
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = mostrarOpciones,
-                    onDismissRequest = { mostrarOpciones = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Eliminar") },
-                        onClick = {
-                            onEliminar()
-                            mostrarOpciones = false
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Default.Delete, contentDescription = null)
-                        }
-                    )
-                }
-            }
+        }
         }
     }
 }

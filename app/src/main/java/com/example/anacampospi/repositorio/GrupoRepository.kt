@@ -53,7 +53,7 @@ class GrupoRepository(
 
             // Usar nombre personalizado si existe, sino generar uno automático
             val nombre = if (!nombrePersonalizado.isNullOrBlank()) {
-                "$nombrePersonalizado (${miembrosFinales.size})"
+                nombrePersonalizado
             } else {
                 generarNombreGrupo(miembrosFinales.size)
             }
@@ -277,7 +277,7 @@ class GrupoRepository(
     }
 
     /**
-     * Elimina un grupo (solo el creador puede eliminarlo).
+     * Elimina un grupo (cualquier miembro puede eliminarlo).
      */
     suspend fun eliminarGrupo(idGrupo: String, uid: String): Result<Unit> {
         return try {
@@ -287,8 +287,9 @@ class GrupoRepository(
                 return Result.failure(Exception("Grupo no encontrado"))
             }
 
-            if (grupo.creadoPor != uid) {
-                return Result.failure(Exception("Solo el creador puede eliminar el grupo"))
+            // Verificar que el usuario sea miembro del grupo
+            if (!grupo.miembros.contains(uid)) {
+                return Result.failure(Exception("No puedes eliminar un grupo del que no eres miembro"))
             }
 
             colGrupos.document(idGrupo).delete().await()
@@ -314,6 +315,6 @@ class GrupoRepository(
             "Amantes del Cine",
             "Tribu del Sofá"
         )
-        return "${nombres.random()} ($numeroMiembros)"
+        return nombres.random()
     }
 }

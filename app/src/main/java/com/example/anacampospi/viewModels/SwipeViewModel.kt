@@ -7,6 +7,7 @@ import com.example.anacampospi.data.tmdb.TmdbClient
 import com.example.anacampospi.data.tmdb.TmdbRepository
 import com.example.anacampospi.modelo.ContenidoLite
 import com.example.anacampospi.modelo.Grupo
+import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.modelo.enums.ValorVoto
 import com.example.anacampospi.repositorio.AuthRepository
@@ -66,9 +67,22 @@ class SwipeViewModel : ViewModel() {
             result.onSuccess { grupo ->
                 // VERIFICAR QUE LA RONDA ESTÉ ACTIVA
                 if (grupo.estado != "ACTIVA") {
+                    // Cargar nombres de usuarios pendientes
+                    val pendientesUids = grupo.usuariosPendientes()
+                    val usuariosPendientes = mutableListOf<Usuario>()
+
+                    pendientesUids.forEach { uid ->
+                        val usuarioResult = UsuarioRepository().getUsuario(uid)
+                        usuarioResult.onSuccess { usuario ->
+                            usuariosPendientes.add(usuario)
+                        }
+                    }
+
                     _uiState.value = _uiState.value.copy(
                         loading = false,
-                        error = "⏳ La ronda aún no está lista.\n\nEsperando a que todos configuren sus preferencias."
+                        esperandoOtrosUsuarios = true,
+                        grupoActual = grupo,
+                        usuariosPendientes = usuariosPendientes
                     )
                     return@onSuccess
                 }
@@ -131,15 +145,26 @@ class SwipeViewModel : ViewModel() {
 
             result.onSuccess { contenido ->
                 contentStack.clear()
-                contentStack.addAll(contenido.filterVotados())
+                val contenidoFiltrado = contenido.filterVotados()
+                contentStack.addAll(contenidoFiltrado)
                 currentPage = 1
 
-                _uiState.value = _uiState.value.copy(
-                    contenidoActual = contentStack.firstOrNull(),
-                    contenidoRestante = contentStack.size - 1,
-                    loading = false,
-                    error = null
-                )
+                // Si no hay contenido después de filtrar, marcar como sin contenido
+                if (contentStack.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        loading = false,
+                        error = null,
+                        sinContenido = true
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        contenidoActual = contentStack.firstOrNull(),
+                        contenidoRestante = contentStack.size - 1,
+                        loading = false,
+                        error = null,
+                        sinContenido = false
+                    )
+                }
             }
 
             result.onFailure { error ->
@@ -343,5 +368,8 @@ data class SwipeUiState(
     val error: String? = null,
     val sinContenido: Boolean = false,
     val hayMatch: Boolean = false,
-    val contenidoMatch: ContenidoLite? = null
+    val contenidoMatch: ContenidoLite? = null,
+    val esperandoOtrosUsuarios: Boolean = false,
+    val grupoActual: Grupo? = null,
+    val usuariosPendientes: List<Usuario> = emptyList()
 )

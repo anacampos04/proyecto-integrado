@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.anacampospi.modelo.SolicitudAmistad
 import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.repositorio.AmigoRepository
+import com.example.anacampospi.repositorio.GrupoRepository
 import com.example.anacampospi.repositorio.SolicitudAmistadRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -20,6 +21,7 @@ class AmigosViewModel(
     private val usuarioRepository: UsuarioRepository = UsuarioRepository(),
     private val amigoRepository: AmigoRepository = AmigoRepository(),
     private val solicitudRepository: SolicitudAmistadRepository = SolicitudAmistadRepository(),
+    private val grupoRepository: GrupoRepository = GrupoRepository(),
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) : ViewModel() {
 
@@ -256,18 +258,45 @@ class AmigosViewModel(
 
     /**
      * Elimina un amigo de la lista.
+     * Verifica primero si el amigo está en alguna ronda activa.
      */
     fun eliminarAmigo(uidAmigo: String) {
         val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
-            val result = amigoRepository.eliminarAmigo(uid, uidAmigo)
+            // Verificar si el amigo está en rondas activas
+            val gruposResult = grupoRepository.obtenerGruposDelUsuario(uid)
 
-            result.onSuccess {
-                cargarAmigos() // Recargar lista
+            gruposResult.onSuccess { grupos ->
+                // Verificar si el amigo está en algún grupo
+                val gruposConAmigo = grupos.filter { grupo ->
+                    grupo.miembros.contains(uidAmigo) &&
+                    grupo.estado != "FINALIZADA" // Verificar que no esté finalizada
+                }
+
+                if (gruposConAmigo.isNotEmpty()) {
+                    // No permitir eliminar si está en rondas activas
+                    _uiState.value = _uiState.value.copy(
+                        errorAmigos = "No puedes eliminar a este amigo porque está en ${gruposConAmigo.size} ${if (gruposConAmigo.size == 1) "ronda activa" else "rondas activas"}"
+                    )
+                } else {
+                    // Proceder con la eliminación
+                    val result = amigoRepository.eliminarAmigo(uid, uidAmigo)
+
+                    result.onSuccess {
+                        _uiState.value = _uiState.value.copy(
+                            mensajeExito = "Amigo eliminado correctamente"
+                        )
+                        cargarAmigos() // Recargar lista
+                    }.onFailure { error ->
+                        _uiState.value = _uiState.value.copy(
+                            errorAmigos = error.message
+                        )
+                    }
+                }
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
-                    errorAmigos = error.message
+                    errorAmigos = "Error al verificar rondas: ${error.message}"
                 )
             }
         }

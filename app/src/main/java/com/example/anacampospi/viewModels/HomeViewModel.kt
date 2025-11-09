@@ -80,7 +80,7 @@ class HomeViewModel(
     }
 
     /**
-     * Elimina un grupo (solo si el usuario es el creador).
+     * Elimina un grupo (cualquier miembro puede eliminarlo).
      */
     fun eliminarGrupo(idGrupo: String) {
         val uid = auth.currentUser?.uid ?: return

@@ -1,5 +1,7 @@
 package com.example.anacampospi.ui.swipe
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -9,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +45,7 @@ fun SwipeScreen(
     viewModel: SwipeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     // Cargar contenido según el modo
     LaunchedEffect(grupoId, plataformas, tipo, generos) {
@@ -71,6 +76,101 @@ fun SwipeScreen(
             )
     ) {
         when {
+                // Esperando a otros usuarios (ronda no activa)
+                uiState.esperandoOtrosUsuarios -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                "⏳",
+                                style = MaterialTheme.typography.displayLarge
+                            )
+                            Text(
+                                "Esperando a otros",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                "La ronda aún no está lista. Algunos amigos todavía tienen que configurar sus preferencias.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+
+                            // Mostrar nombres de usuarios pendientes
+                            if (uiState.usuariosPendientes.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = SurfaceLight.copy(alpha = 0.6f)
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Esperando a:",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = PopcornYellow,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        uiState.usuariosPendientes.forEach { usuario ->
+                                            Text(
+                                                text = "• ${usuario.nombre.ifBlank { "Usuario sin nombre" }}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Color.White.copy(alpha = 0.9f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Botón para compartir por WhatsApp
+                            Button(
+                                onClick = {
+                                    val mensaje = "¡Hola! 👋\n\n" +
+                                            "Estoy esperando que configures tus preferencias para empezar nuestra ronda de votación en PopCornTribu.\n\n" +
+                                            "¡Entra a la app para que podamos empezar! 🎬🍿"
+
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW)
+                                        intent.data = Uri.parse("https://wa.me/?text=${Uri.encode(mensaje)}")
+                                        context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        // Si WhatsApp no está instalado, compartir de forma genérica
+                                        val intent = Intent(Intent.ACTION_SEND)
+                                        intent.type = "text/plain"
+                                        intent.putExtra(Intent.EXTRA_TEXT, mensaje)
+                                        context.startActivity(Intent.createChooser(intent, "Compartir recordatorio"))
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = TealPastel,
+                                    contentColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(0.8f)
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = "Compartir")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Recordar por WhatsApp")
+                            }
+                        }
+                    }
+                }
+
                 // Estado de carga
                 uiState.loading -> {
                     Box(

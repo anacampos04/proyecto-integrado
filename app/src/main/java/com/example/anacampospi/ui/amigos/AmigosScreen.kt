@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.modelo.Usuario
+import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.AmigosViewModel
 
@@ -493,7 +494,7 @@ fun ListaAmigosSection(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Mis amigos (${amigos.size})",
+                    text = "Mis amigos",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -571,28 +572,24 @@ fun AmigoItem(
     amigo: Usuario,
     onEliminar: () -> Unit
 ) {
-    var mostrarConfirmacion by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = Night.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(12.dp)
+    SwipeToDismissItem(
+        onDelete = onEliminar,
+        cornerRadius = 12.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF1A1A1A)
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Avatar placeholder
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -608,7 +605,7 @@ fun AmigoItem(
                     )
                 }
 
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = amigo.nombre.ifBlank { "Usuario sin nombre" },
                         style = MaterialTheme.typography.bodyLarge,
@@ -622,39 +619,7 @@ fun AmigoItem(
                     )
                 }
             }
-
-            IconButton(onClick = { mostrarConfirmacion = true }) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Eliminar amigo",
-                    tint = Color.White.copy(alpha = 0.6f)
-                )
-            }
         }
-    }
-
-    // Diálogo de confirmación
-    if (mostrarConfirmacion) {
-        AlertDialog(
-            onDismissRequest = { mostrarConfirmacion = false },
-            title = { Text("Eliminar amigo") },
-            text = { Text("¿Estás seguro de que quieres eliminar a ${amigo.nombre} de tu lista de amigos?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onEliminar()
-                        mostrarConfirmacion = false
-                    }
-                ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { mostrarConfirmacion = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
     }
 }
 
@@ -728,7 +693,7 @@ fun SolicitudesPendientesSection(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Solicitudes recibidas (${solicitudes.size})",
+                    text = "Solicitudes recibidas",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -876,7 +841,7 @@ fun SolicitudesEnviadasSection(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Solicitudes enviadas (${solicitudes.size})",
+                    text = "Solicitudes enviadas",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold

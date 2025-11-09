@@ -46,7 +46,6 @@ fun PerfilScreen(
     val uiState by viewModel.uiState.collectAsState()
     var mostrarSelectorPlataformas by remember { mutableStateOf(false) }
     var mostrarEditarNombre by remember { mutableStateOf(false) }
-    var mostrarEditarRegion by remember { mutableStateOf(false) }
 
     // Animación de entrada
     var visible by remember { mutableStateOf(false) }
@@ -305,68 +304,6 @@ fun PerfilScreen(
                         }
                     }
 
-                    // Región
-                    AnimatedVisibility(
-                        visible = visible,
-                        enter = fadeIn(animationSpec = tween(600, delayMillis = 300)) +
-                                slideInVertically(initialOffsetY = { 50 })
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(
-                                    elevation = 4.dp,
-                                    shape = RoundedCornerShape(16.dp),
-                                    ambientColor = TealPastel.copy(alpha = 0.2f)
-                                ),
-                            colors = CardDefaults.cardColors(
-                                containerColor = SurfaceLight.copy(alpha = 0.6f)
-                            ),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Place,
-                                        contentDescription = null,
-                                        tint = TealPastel,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "Región",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = uiState.usuario?.region ?: "ES",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            color = Color.White.copy(alpha = 0.8f)
-                                        )
-                                    }
-                                }
-                                IconButton(onClick = { mostrarEditarRegion = true }) {
-                                    Icon(
-                                        Icons.Default.Edit,
-                                        contentDescription = "Editar región",
-                                        tint = TealPastel
-                                    )
-                                }
-                            }
-                        }
-                    }
-
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -394,18 +331,6 @@ fun PerfilScreen(
             onGuardar = { nuevoNombre ->
                 viewModel.actualizarNombre(nuevoNombre)
                 mostrarEditarNombre = false
-            }
-        )
-    }
-
-    // Modal de edición de región
-    if (mostrarEditarRegion) {
-        EditarRegionModal(
-            regionActual = uiState.usuario?.region ?: "ES",
-            onDismiss = { mostrarEditarRegion = false },
-            onGuardar = { nuevaRegion ->
-                viewModel.actualizarRegion(nuevaRegion)
-                mostrarEditarRegion = false
             }
         )
     }
@@ -587,162 +512,6 @@ fun EditarTextoModal(
                 label = titulo,
                 singleLine = true
             )
-        }
-    )
-}
-
-/**
- * Modal para editar región con desplegable de opciones comunes
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun EditarRegionModal(
-    regionActual: String,
-    onDismiss: () -> Unit,
-    onGuardar: (String) -> Unit
-) {
-    // Regiones más comunes con código y nombre
-    val regiones = listOf(
-        "ES" to "España",
-        "US" to "Estados Unidos",
-        "GB" to "Reino Unido",
-        "FR" to "Francia",
-        "DE" to "Alemania",
-        "IT" to "Italia",
-        "PT" to "Portugal",
-        "MX" to "México",
-        "AR" to "Argentina",
-        "CO" to "Colombia",
-        "CL" to "Chile",
-        "PE" to "Perú",
-        "BR" to "Brasil",
-        "CA" to "Canadá",
-        "AU" to "Australia",
-        "NL" to "Países Bajos",
-        "BE" to "Bélgica",
-        "CH" to "Suiza",
-        "AT" to "Austria",
-        "SE" to "Suecia",
-        "NO" to "Noruega",
-        "DK" to "Dinamarca",
-        "FI" to "Finlandia",
-        "IE" to "Irlanda",
-        "PL" to "Polonia",
-        "CZ" to "República Checa",
-        "RO" to "Rumania",
-        "GR" to "Grecia",
-        "TR" to "Turquía",
-        "JP" to "Japón",
-        "KR" to "Corea del Sur",
-        "CN" to "China",
-        "IN" to "India",
-        "NZ" to "Nueva Zelanda"
-    )
-
-    var regionSeleccionada by remember { mutableStateOf(regionActual) }
-    var expanded by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = SurfaceLight,
-        shape = RoundedCornerShape(24.dp),
-        confirmButton = {
-            Button(
-                onClick = { onGuardar(regionSeleccionada) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = TealPastel,
-                    contentColor = Color.Black
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = Color.White.copy(alpha = 0.7f)
-                )
-            ) {
-                Text("Cancelar")
-            }
-        },
-        title = {
-            Text(
-                "Cambiar región",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    "Selecciona tu región para obtener información de plataformas correcta",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = regiones.find { it.first == regionSeleccionada }?.let { "${it.first} - ${it.second}" } ?: regionSeleccionada,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Región", color = Color.White.copy(alpha = 0.7f)) },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = SurfaceDark.copy(alpha = 0.6f),
-                            unfocusedContainerColor = SurfaceDark.copy(alpha = 0.6f),
-                            focusedBorderColor = TealPastel,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier
-                            .background(SurfaceLight)
-                            .heightIn(max = 400.dp)
-                    ) {
-                        regiones.forEach { (codigo, nombre) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        "$codigo - $nombre",
-                                        color = if (codigo == regionSeleccionada) TealPastel else Color.White
-                                    )
-                                },
-                                onClick = {
-                                    regionSeleccionada = codigo
-                                    expanded = false
-                                },
-                                colors = MenuDefaults.itemColors(
-                                    textColor = Color.White
-                                ),
-                                modifier = Modifier.background(
-                                    if (codigo == regionSeleccionada)
-                                        TealPastel.copy(alpha = 0.2f)
-                                    else
-                                        Color.Transparent
-                                )
-                            )
-                        }
-                    }
-                }
-            }
         }
     )
 }

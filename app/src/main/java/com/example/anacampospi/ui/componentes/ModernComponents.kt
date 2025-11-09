@@ -5,8 +5,11 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -327,5 +330,58 @@ fun ModernTextButton(
             text = text,
             style = MaterialTheme.typography.bodyMedium
         )
+    }
+}
+
+/**
+ * Componente reutilizable para swipe-to-delete.
+ * Envuelve cualquier contenido y permite eliminarlo deslizando hacia la izquierda.
+ *
+ * @param onDelete Callback que se ejecuta cuando se completa el deslizamiento
+ * @param cornerRadius Radio de las esquinas (por defecto 12.dp)
+ * @param content Contenido que se mostrará y se puede deslizar
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SwipeToDismissItem(
+    onDelete: () -> Unit,
+    cornerRadius: androidx.compose.ui.unit.Dp = 12.dp,
+    content: @Composable () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    false
+                }
+                else -> false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+                    .background(CinemaRed)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    ) {
+        content()
     }
 }
