@@ -7,8 +7,8 @@
     <style name="Theme.Anacampospi.Starting" parent="Theme.SplashScreen">
         <!-- Color de fondo de la splash screen -->
         <item name="windowSplashScreenBackground">@color/black</item>
-        <!-- Icono que se muestra en el centro -->
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- Logo completo PopCorn Tribu -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
         <!-- Color del icono animado (opcional) -->
         <item name="windowSplashScreenIconBackgroundColor">@color/black</item>
         <!-- Duración de la animación del icono (opcional, default 1000ms) -->

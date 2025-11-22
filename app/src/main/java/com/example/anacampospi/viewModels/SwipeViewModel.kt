@@ -277,13 +277,14 @@ class SwipeViewModel : ViewModel() {
     /**
      * Verifica si hay un match para el contenido dado.
      * Un match ocurre cuando TODOS los miembros del grupo votaron ME_GUSTA.
+     * Si hay match, lo guarda en Firestore.
      */
     private fun verificarMatch(contenido: ContenidoLite) {
         viewModelScope.launch {
             val uid = authRepository.currentUid() ?: return@launch
 
             // Si no hay grupo o no hay miembros, no puede haber match
-            if (miembrosGrupo.isEmpty()) {
+            if (miembrosGrupo.isEmpty() || currentGrupoId == null) {
                 android.util.Log.d("SwipeViewModel", "No hay grupo configurado, no se verifica match")
                 return@launch
             }
@@ -295,6 +296,28 @@ class SwipeViewModel : ViewModel() {
             result.onSuccess { hayMatch ->
                 if (hayMatch) {
                     android.util.Log.d("SwipeViewModel", "¡MATCH! TODOS los miembros votaron ME_GUSTA: ${contenido.titulo}")
+
+                    // Guardar el match en Firestore
+                    val match = com.example.anacampospi.modelo.Match(
+                        idContenido = contenido.idContenido,
+                        usuariosCoincidentes = miembrosGrupo,
+                        primerCoincidenteEn = null, // ServerTimestamp
+                        actualizadoEn = null,
+                        titulo = contenido.titulo,
+                        posterUrl = contenido.posterUrl,
+                        tipo = contenido.tipo,
+                        anioEstreno = contenido.anioEstreno,
+                        proveedores = contenido.proveedores,
+                        puntuacion = contenido.puntuacion
+                    )
+
+                    grupoRepository.guardarMatch(currentGrupoId!!, match).onSuccess {
+                        android.util.Log.d("SwipeViewModel", "Match guardado en Firestore correctamente")
+                    }.onFailure { error ->
+                        android.util.Log.e("SwipeViewModel", "Error guardando match: ${error.message}", error)
+                    }
+
+                    // Actualizar UI para mostrar el diálogo
                     _uiState.value = _uiState.value.copy(
                         hayMatch = true,
                         contenidoMatch = contenido
@@ -351,8 +374,46 @@ class SwipeViewModel : ViewModel() {
      * Reinicia la sesión de swipe
      */
     fun reiniciar() {
+        // Guardar los contadores actuales antes de resetear
+        val likesActuales = _uiState.value.totalLikes
+        val dislikesActuales = _uiState.value.totalDislikes
+
+        // Resetear estado pero mantener contadores
+        _uiState.value = SwipeUiState(
+            totalLikes = likesActuales,
+            totalDislikes = dislikesActuales
+        )
+
+        // Recargar contenido
         cargarContenido()
-        _uiState.value = SwipeUiState()
+    }
+
+    /**
+     * Carga los detalles adicionales de un contenido bajo demanda
+     * (providers y trailer cuando el usuario voltea la tarjeta)
+     */
+    fun loadContentDetails(contenido: ContenidoLite) {
+        viewModelScope.launch {
+            val result = tmdbRepository.enrichContentDetails(contenido)
+            result.onSuccess { contenidoEnriquecido ->
+                // Actualizar el contenido en el stack
+                val index = contentStack.indexOfFirst { it.idContenido == contenidoEnriquecido.idContenido }
+                if (index != -1) {
+                    contentStack[index] = contenidoEnriquecido
+
+                    // Si es el contenido actual, actualizar el UI state
+                    if (_uiState.value.contenidoActual?.idContenido == contenidoEnriquecido.idContenido) {
+                        _uiState.value = _uiState.value.copy(
+                            contenidoActual = contenidoEnriquecido
+                        )
+                    }
+                }
+                android.util.Log.d("SwipeViewModel", "Detalles cargados: ${contenidoEnriquecido.titulo} - Providers: ${contenidoEnriquecido.proveedores.size}, Trailer: ${contenidoEnriquecido.trailer != null}")
+            }
+            result.onFailure { error ->
+                android.util.Log.e("SwipeViewModel", "Error cargando detalles: ${error.message}", error)
+            }
+        }
     }
 }
 

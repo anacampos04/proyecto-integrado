@@ -10,6 +10,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.ui.res.painterResource
+import androidx.annotation.DrawableRes
+import com.example.anacampospi.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,17 +33,38 @@ import com.example.anacampospi.ui.theme.*
 import kotlin.math.abs
 
 /**
+ * Representa un icono que puede ser ImageVector o Drawable
+ */
+sealed class NavIcon {
+    data class Vector(val imageVector: ImageVector) : NavIcon()
+    data class Drawable(@DrawableRes val resId: Int) : NavIcon()
+}
+
+/**
  * Ítem de navegación para la barra curva
  */
 data class CurvedNavItem(
     val route: String,
-    val icon: ImageVector,
+    val icon: NavIcon,
     val label: String
-)
+) {
+    // Constructor de conveniencia para ImageVector
+    constructor(route: String, imageVector: ImageVector, label: String) : this(
+        route,
+        NavIcon.Vector(imageVector),
+        label
+    )
+
+    // Constructor de conveniencia para Drawable
+    constructor(route: String, @DrawableRes drawableRes: Int, label: String) : this(
+        route,
+        NavIcon.Drawable(drawableRes),
+        label
+    )
+}
 
 /**
- * Barra de navegación inferior con curva animada invertida - Estilo moderno 2025
- * La curva ahora simula esquinas redondeadas de la pantalla sobre la navbar
+ * Barra de navegación inferior con curva animada invertida
  */
 @Composable
 fun CurvedBottomNavigation(
@@ -165,7 +190,7 @@ fun CurvedBottomNavigation(
  */
 @Composable
 private fun NavBarItem(
-    icon: ImageVector,
+    icon: NavIcon,
     label: String,
     isSelected: Boolean,
     offsetY: androidx.compose.ui.unit.Dp,
@@ -227,30 +252,56 @@ private fun NavBarItem(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
+                    when (icon) {
+                        is NavIcon.Vector -> Icon(
+                            imageVector = icon.imageVector,
+                            contentDescription = label,
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(26.dp)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                        )
+                        is NavIcon.Drawable -> Icon(
+                            painter = painterResource(id = icon.resId),
+                            contentDescription = label,
+                            tint = Color.Black,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                        )
+                    }
+                }
+            } else {
+                when (icon) {
+                    is NavIcon.Vector -> Icon(
+                        imageVector = icon.imageVector,
                         contentDescription = label,
-                        tint = Color.Black,
+                        tint = Color.White.copy(alpha = alpha),
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(24.dp)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                    )
+                    is NavIcon.Drawable -> Icon(
+                        painter = painterResource(id = icon.resId),
+                        contentDescription = label,
+                        tint = Color.White.copy(alpha = alpha),
+                        modifier = Modifier
+                            .size(30.dp)
                             .graphicsLayer {
                                 scaleX = scale
                                 scaleY = scale
                             }
                     )
                 }
-            } else {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = Color.White.copy(alpha = alpha),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                )
             }
         }
     }
@@ -261,10 +312,10 @@ private fun NavBarItem(
  */
 object DefaultNavItems {
     val items = listOf(
-        CurvedNavItem("home", Icons.Default.Home, "Inicio"),
-        CurvedNavItem("amigos", Icons.Default.People, "Amigos"),
-        CurvedNavItem("swipe", Icons.Default.Favorite, "Swipes"),
-        CurvedNavItem("matches", Icons.Default.Star, "Matches"),
-        CurvedNavItem("perfil", Icons.Default.Person, "Perfil")
+        CurvedNavItem("home", Icons.Rounded.Home, "Inicio"),
+        CurvedNavItem("amigos", Icons.Rounded.People, "Amigos"),
+        CurvedNavItem("swipe", R.drawable.ic_popcorn, "Swipes"),
+        CurvedNavItem("matches", Icons.Rounded.Favorite, "Matches"),
+        CurvedNavItem("perfil", Icons.Rounded.Person, "Perfil")
     )
 }

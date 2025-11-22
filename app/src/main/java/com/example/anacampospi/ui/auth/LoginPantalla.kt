@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
 import com.example.anacampospi.R
 import com.example.anacampospi.auth.GoogleSignInHelper
 import com.example.anacampospi.viewModels.AuthViewModel
@@ -127,10 +129,10 @@ fun LoginPantalla(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Contenedor del logo con brillo sutil
+                    // Icono de palomitas con gradiente (El Box crea el fondo)
                     Box(
                         modifier = Modifier
-                            .size(80.dp)
+                            .size(120.dp)
                             .shadow(
                                 elevation = 16.dp,
                                 shape = RoundedCornerShape(24.dp),
@@ -142,15 +144,18 @@ fun LoginPantalla(
                                 brush = Brush.verticalGradient(
                                     colors = listOf(
                                         TealPastel,
-                                        TealDark
+                                        TealDark // El gradiente azul/verde que quieres
                                     )
                                 )
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "🍿",
-                            style = MaterialTheme.typography.displayMedium
+                        Image(
+                            // Usa el nombre de tu archivo PNG de palomitas SIN fondo
+                            painter = painterResource(id = R.drawable.popcorn_tribu_icon_clean),
+                            contentDescription = "Icono de PopCorn Tribu",
+                            modifier = Modifier
+                                .size(100.dp) // Tamaño del dibujo dentro del Box (120dp)
                         )
                     }
 
@@ -333,7 +338,9 @@ fun ResetPasswordDialog(
     var resetEmail by remember { mutableStateOf("") }
 
     val emailError = remember(resetEmail) {
-        if (resetEmail.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(resetEmail).matches()) {
+        if (resetEmail.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(resetEmail)
+                .matches()
+        ) {
             "Email inválido"
         } else null
     }

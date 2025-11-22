@@ -318,12 +318,14 @@ fun SeccionRondasActivas(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Text(
-                text = "🟢",
-                style = MaterialTheme.typography.titleLarge
+            Icon(
+                imageVector = Icons.Filled.Movie,
+                contentDescription = null,
+                tint = TealPastel,
+                modifier = Modifier.size(28.dp)
             )
             Text(
-                text = "Listas para votar",
+                text = "A swipear",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -337,8 +339,7 @@ fun SeccionRondasActivas(
                 GrupoItem(
                     grupo = grupo,
                     onClick = { onGrupoClick(grupo.idGrupo) },
-                    onEliminar = { onEliminar(grupo.idGrupo) },
-                    badge = "ACTIVA"
+                    onEliminar = { onEliminar(grupo.idGrupo) }
                 )
             }
         }
@@ -364,12 +365,14 @@ fun SeccionRondasPendientes(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Text(
-                text = "⏳",
-                style = MaterialTheme.typography.titleLarge
+            Icon(
+                imageVector = Icons.Filled.HourglassEmpty,
+                contentDescription = null,
+                tint = PopcornYellow,
+                modifier = Modifier.size(28.dp)
             )
             Text(
-                text = "Pendientes de configurar",
+                text = "Tu grupo te espera",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = PopcornYellow
@@ -383,8 +386,7 @@ fun SeccionRondasPendientes(
                 GrupoItem(
                     grupo = grupo,
                     onClick = { onConfigurarClick(grupo.idGrupo) },
-                    onEliminar = { onEliminar(grupo.idGrupo) },
-                    badge = "CONFIGURAR"
+                    onEliminar = { onEliminar(grupo.idGrupo) }
                 )
             }
         }
@@ -410,12 +412,14 @@ fun SeccionRondasEsperando(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(bottom = 16.dp)
         ) {
-            Text(
-                text = "⏸️",
-                style = MaterialTheme.typography.titleLarge
+            Icon(
+                imageVector = Icons.Filled.HourglassTop,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.7f),
+                modifier = Modifier.size(28.dp)
             )
             Text(
-                text = "Esperando a otros",
+                text = "Esperando al grupo",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White.copy(alpha = 0.7f)
@@ -430,7 +434,6 @@ fun SeccionRondasEsperando(
                     grupo = grupo,
                     onClick = { onGrupoClick(grupo.idGrupo) },
                     onEliminar = { onEliminar(grupo.idGrupo) },
-                    badge = "ESPERANDO",
                     mostrarUsuariosPendientes = true
                 )
             }
@@ -446,15 +449,8 @@ fun GrupoItem(
     grupo: Grupo,
     onClick: () -> Unit,
     onEliminar: () -> Unit,
-    badge: String? = null,
     mostrarUsuariosPendientes: Boolean = false
 ) {
-    val badgeColor = when (badge) {
-        "ACTIVA" -> TealPastel
-        "CONFIGURAR" -> PopcornYellow
-        "ESPERANDO" -> Color.White.copy(alpha = 0.3f)
-        else -> Color.Transparent
-    }
 
     SwipeToDismissItem(
         onDelete = onEliminar,
@@ -503,34 +499,12 @@ fun GrupoItem(
 
                 // Info
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = grupo.nombre,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        // Badge
-                        if (badge != null) {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = badgeColor
-                                ),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = badge,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.Black,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = grupo.nombre,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),

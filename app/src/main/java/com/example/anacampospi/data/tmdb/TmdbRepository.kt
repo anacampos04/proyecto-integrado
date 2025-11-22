@@ -65,6 +65,8 @@ class TmdbRepository(private val apiService: TmdbApiService) {
 
     /**
      * Descubre contenido con filtros específicos
+     * OPTIMIZADO: Solo carga datos básicos (título, poster, año, puntuación)
+     * Los providers y trailer se cargan bajo demanda cuando el usuario voltea la tarjeta
      */
     suspend fun discoverContent(
         tipo: TipoContenido? = null,
@@ -88,13 +90,10 @@ class TmdbRepository(private val apiService: TmdbApiService) {
                         withGenres = genresParam,
                         minRating = minRating
                     )
+                    // OPTIMIZACIÓN: No cargar providers ni trailer en la carga inicial
                     val movies = moviesResponse.results.map { movie ->
-                        async {
-                            val providers = fetchMovieProviders(movie.id)
-                            val trailer = fetchMovieTrailer(movie.id)
-                            movie.toContenidoLite(providers, trailer)
-                        }
-                    }.awaitAll()
+                        movie.toContenidoLite(emptyList(), null)
+                    }
                     content.addAll(movies)
                 }
                 TipoContenido.SERIE -> {
@@ -104,44 +103,41 @@ class TmdbRepository(private val apiService: TmdbApiService) {
                         withGenres = genresParam,
                         minRating = minRating
                     )
+                    // OPTIMIZACIÓN: No cargar providers ni trailer en la carga inicial
                     val tvShows = tvResponse.results.map { tvShow ->
-                        async {
-                            val providers = fetchTvShowProviders(tvShow.id)
-                            val trailer = fetchTvShowTrailer(tvShow.id)
-                            tvShow.toContenidoLite(providers, trailer)
-                        }
-                    }.awaitAll()
+                        tvShow.toContenidoLite(emptyList(), null)
+                    }
                     content.addAll(tvShows)
                 }
                 null -> {
-                    // Obtener ambos tipos
-                    val moviesResponse = apiService.discoverMovies(
-                        page = page,
-                        withWatchProviders = platformsParam,
-                        withGenres = genresParam,
-                        minRating = minRating
-                    )
-                    val tvResponse = apiService.discoverTvShows(
-                        page = page,
-                        withWatchProviders = platformsParam,
-                        withGenres = genresParam,
-                        minRating = minRating
-                    )
+                    // Obtener ambos tipos en paralelo
+                    val moviesDeferred = async {
+                        apiService.discoverMovies(
+                            page = page,
+                            withWatchProviders = platformsParam,
+                            withGenres = genresParam,
+                            minRating = minRating
+                        )
+                    }
+                    val tvDeferred = async {
+                        apiService.discoverTvShows(
+                            page = page,
+                            withWatchProviders = platformsParam,
+                            withGenres = genresParam,
+                            minRating = minRating
+                        )
+                    }
 
+                    val moviesResponse = moviesDeferred.await()
+                    val tvResponse = tvDeferred.await()
+
+                    // OPTIMIZACIÓN: No cargar providers ni trailer en la carga inicial
                     val movies = moviesResponse.results.map { movie ->
-                        async {
-                            val providers = fetchMovieProviders(movie.id)
-                            val trailer = fetchMovieTrailer(movie.id)
-                            movie.toContenidoLite(providers, trailer)
-                        }
-                    }.awaitAll()
+                        movie.toContenidoLite(emptyList(), null)
+                    }
                     val tvShows = tvResponse.results.map { tvShow ->
-                        async {
-                            val providers = fetchTvShowProviders(tvShow.id)
-                            val trailer = fetchTvShowTrailer(tvShow.id)
-                            tvShow.toContenidoLite(providers, trailer)
-                        }
-                    }.awaitAll()
+                        tvShow.toContenidoLite(emptyList(), null)
+                    }
 
                     content.addAll(movies)
                     content.addAll(tvShows)
@@ -149,6 +145,43 @@ class TmdbRepository(private val apiService: TmdbApiService) {
             }
 
             Result.success(content.shuffled())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Carga los detalles adicionales de un contenido (providers y trailer)
+     * bajo demanda cuando el usuario voltea la tarjeta
+     */
+    suspend fun enrichContentDetails(
+        contenido: ContenidoLite
+    ): Result<ContenidoLite> = withContext(Dispatchers.IO) {
+        try {
+            // Extraer el ID numérico del idContenido (formato "movie:123" o "tv:456")
+            val contentId = contenido.idContenido.substringAfter(":").toIntOrNull()
+            if (contentId == null) {
+                return@withContext Result.failure(Exception("ID de contenido inválido"))
+            }
+
+            val providers = when (contenido.tipo) {
+                TipoContenido.PELICULA -> fetchMovieProviders(contentId)
+                TipoContenido.SERIE -> fetchTvShowProviders(contentId)
+            }
+
+            val trailerKey = when (contenido.tipo) {
+                TipoContenido.PELICULA -> fetchMovieTrailer(contentId)
+                TipoContenido.SERIE -> fetchTvShowTrailer(contentId)
+            }
+
+            val trailer = trailerKey?.let {
+                com.example.anacampospi.modelo.Trailer(key = it)
+            }
+
+            Result.success(contenido.copy(
+                proveedores = providers,
+                trailer = trailer
+            ))
         } catch (e: Exception) {
             Result.failure(e)
         }

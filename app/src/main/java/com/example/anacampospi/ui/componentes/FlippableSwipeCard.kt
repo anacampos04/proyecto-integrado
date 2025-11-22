@@ -50,7 +50,8 @@ fun FlippableSwipeCard(
     contenido: ContenidoLite,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLoadDetails: ((ContenidoLite) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -61,6 +62,7 @@ fun FlippableSwipeCard(
     val rotation = remember { Animatable(0f) }
     var isFlipped by remember { mutableStateOf(false) }
     val flipRotation = remember { Animatable(0f) }
+    var hasLoadedDetails by remember { mutableStateOf(false) }
 
     // Umbral para considerar un swipe válido
     val swipeThreshold = 300f
@@ -135,6 +137,12 @@ fun FlippableSwipeCard(
                         if (isFlipped) 180f else 0f,
                         tween(600)
                     )
+
+                    // Cargar detalles bajo demanda solo la primera vez que se voltea
+                    if (isFlipped && !hasLoadedDetails && onLoadDetails != null) {
+                        hasLoadedDetails = true
+                        onLoadDetails(contenido)
+                    }
                 }
             }
     ) {

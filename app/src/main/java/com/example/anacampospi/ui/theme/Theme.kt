@@ -68,7 +68,7 @@ private val DarkColors = darkColorScheme(
 )
 
 /**
- * Tema principal de PopCornTribu basado en los colores del icono.
+ * Tema principal de PopCornTribu
  */
 @Composable
 fun PopCornTribuTheme(

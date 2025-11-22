@@ -2,12 +2,22 @@ package com.example.anacampospi.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Colores base extraídos del icono
-val TealPastel      = Color(0xFF16B8B8) // fondo icono - color principal
-val PopcornYellow   = Color(0xFFF6C04D) // palomitas - color secundario
-val CinemaRed       = Color(0xFFE64A2E) // franjas cubo - color de acento/error
-val Cream           = Color(0xFFF8EAD8) // crema/vainilla - acentos sutiles
-// val OutlineBrown = Color(0xFF6B3A1E) // ELIMINADO - reemplazado por grises neutros
+// === PALETA CORPORATIVA POPCORN TRIBU ===
+
+// Colores Primarios (extraídos del logo)
+val TealPastel      = Color(0xFF1BA9B8) // Turquesa del icono - color principal de marca
+val PopcornYellow   = Color(0xFFFFC857) // Amarillo de las palomitas
+val CoralOrange     = Color(0xFFFF6B4A) // Naranja coral de "Tribu"
+
+// Colores Secundarios
+val CinemaRed       = Color(0xFFFF5733) // Rojo de las rayas del cubo
+val ChocolateBrown  = Color(0xFF6B3E2E) // Marrón de bordes y detalles
+val CreamBeige      = Color(0xFFF5E6C8) // Crema del fondo
+val CreamLight      = Color(0xFFFFF8E7) // Crema claro del cubo
+
+// Colores de Acento
+val GoldenYellow    = Color(0xFFFFAA33) // Amarillo dorado para highlights
+val Cream           = Color(0xFFF8EAD8) // Crema para acentos sutiles
 
 // Derivados / neutrales
 val Ink             = Color(0xFF1B1B1B)

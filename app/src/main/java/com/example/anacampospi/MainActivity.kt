@@ -21,7 +21,6 @@ import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.ui.auth.LoginPantalla
 import com.example.anacampospi.ui.auth.RegistroPantalla
-// VERSIÓN ACTUAL: V1 (navbar con curva elegante)
 import com.example.anacampospi.ui.componentes.CurvedBottomNavigation
 import com.example.anacampospi.ui.componentes.DefaultNavItems
 import com.example.anacampospi.ui.amigos.AmigosScreen
@@ -130,12 +129,22 @@ fun MainScreenWithNavigation(
     val actualRoute = navBackStackEntry?.destination?.route ?: "home"
 
     // Mapear rutas internas a rutas de la navbar
-    // Cuando estamos en configurarRonda o swipe/{grupoId}, marcar "swipe" en la navbar
-    val currentRoute = when {
+    val mappedRoute = when {
+        // Configuración y swipe -> marcar "swipe" en navbar
         actualRoute == "configurarRonda" -> "swipe"
+        actualRoute.startsWith("configurarRonda/") -> "swipe" // Usuario invitado configurando
         actualRoute.startsWith("swipe/") -> "swipe"
+
+        // Pantallas de matches -> marcar "matches" en navbar
+        actualRoute.startsWith("matchesFrom/") -> "matches" // Matches con grupo pre-seleccionado
+        actualRoute.startsWith("matches/") -> "matches" // Matches de grupo específico
+
         else -> actualRoute
     }
+
+    // Asegurar que siempre hay un icono marcado (si la ruta no está en navbar, usar "home")
+    val navItemRoutes = DefaultNavItems.items.map { it.route }
+    val currentRoute = if (mappedRoute in navItemRoutes) mappedRoute else "home"
 
     Scaffold(
         bottomBar = {
@@ -143,11 +152,42 @@ fun MainScreenWithNavigation(
                 items = DefaultNavItems.items,
                 currentRoute = currentRoute,
                 onNavigate = { route ->
-                    navController.navigate(route) {
-                        // Pop to start destination to avoid building up back stack
-                        popUpTo("home") { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    // Navegación desde la navbar: siempre debe funcionar correctamente
+                    // y volver a la pantalla principal correspondiente
+                    when (route) {
+                        "home" -> {
+                            // Home: limpiar todo el stack y volver a home
+                            navController.navigate("home") {
+                                popUpTo("home") {
+                                    inclusive = true
+                                    saveState = false
+                                }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                        "swipe" -> {
+                            // Swipe: ir a configurar ronda (nueva ronda)
+                            navController.navigate("configurarRonda") {
+                                popUpTo("home") {
+                                    inclusive = false
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = false
+                            }
+                        }
+                        else -> {
+                            // Otras rutas (amigos, matches, perfil)
+                            navController.navigate(route) {
+                                popUpTo("home") {
+                                    inclusive = false
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     }
                 }
             )
@@ -220,6 +260,14 @@ fun MainScreenWithNavigation(
                             navController.navigate("home") {
                                 popUpTo("home") { inclusive = true }
                             }
+                        },
+                        onVerMatches = {
+                            // Navegar a matches general con el grupo pre-seleccionado
+                            if (grupoId != null) {
+                                navController.navigate("matchesFrom/$grupoId")
+                            } else {
+                                navController.navigate("matches")
+                            }
                         }
                     )
                 }
@@ -238,7 +286,26 @@ fun MainScreenWithNavigation(
                 }
 
                 composable("matches") {
+                    // Modo general: todos los grupos
                     MatchesScreen()
+                }
+
+                composable("matchesFrom/{grupoId}") { backStackEntry ->
+                    // Modo general pero con filtro pre-seleccionado del grupo
+                    val grupoIdInicial = backStackEntry.arguments?.getString("grupoId")
+                    MatchesScreen(
+                        grupoIdInicial = grupoIdInicial
+                    )
+                }
+
+                composable("matches/{grupoId}") { backStackEntry ->
+                    // Modo específico: matches de un grupo concreto
+                    val grupoId = backStackEntry.arguments?.getString("grupoId")
+                    val grupoNombre = backStackEntry.arguments?.getString("grupoNombre")
+                    MatchesScreen(
+                        grupoId = grupoId,
+                        grupoNombre = grupoNombre
+                    )
                 }
 
                 composable("perfil") {

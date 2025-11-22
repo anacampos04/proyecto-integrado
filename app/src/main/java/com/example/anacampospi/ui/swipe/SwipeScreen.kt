@@ -42,6 +42,7 @@ fun SwipeScreen(
     tipo: TipoContenido? = null,
     generos: List<Int>? = null,
     onBack: () -> Unit = {},
+    onVerMatches: () -> Unit = {},
     viewModel: SwipeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -290,36 +291,30 @@ fun SwipeScreen(
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
-                                                "❤️",
-                                                style = MaterialTheme.typography.displaySmall
-                                            )
-                                            Text(
                                                 "${uiState.totalLikes}",
-                                                style = MaterialTheme.typography.headlineMedium,
+                                                style = MaterialTheme.typography.displayMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = TealPastel
                                             )
                                             Text(
                                                 "Me gusta",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = Color.White.copy(alpha = 0.7f)
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                fontWeight = FontWeight.Medium
                                             )
                                         }
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
-                                                "❌",
-                                                style = MaterialTheme.typography.displaySmall
-                                            )
-                                            Text(
                                                 "${uiState.totalDislikes}",
-                                                style = MaterialTheme.typography.headlineMedium,
+                                                style = MaterialTheme.typography.displayMedium,
                                                 fontWeight = FontWeight.Bold,
                                                 color = CinemaRed
                                             )
                                             Text(
                                                 "No me gusta",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = Color.White.copy(alpha = 0.7f)
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                fontWeight = FontWeight.Medium
                                             )
                                         }
                                     }
@@ -363,6 +358,9 @@ fun SwipeScreen(
                                 contenido = uiState.contenidoActual!!,
                                 onSwipeLeft = { viewModel.onSwipeLeft() },
                                 onSwipeRight = { viewModel.onSwipeRight() },
+                                onLoadDetails = { contenido ->
+                                    viewModel.loadContentDetails(contenido)
+                                },
                                 modifier = Modifier
                                     .weight(1f, fill = false)
                                     .padding(top = 8.dp, bottom = 16.dp)
@@ -419,8 +417,8 @@ fun SwipeScreen(
                     viewModel.continuarDespuesDeMatch()
                 },
                 onVerMatches = {
-                    // Por ahora solo continuar, la pantalla de matches se implementará después
                     viewModel.continuarDespuesDeMatch()
+                    onVerMatches() // Navegar a la pantalla de matches
                 }
             )
         }

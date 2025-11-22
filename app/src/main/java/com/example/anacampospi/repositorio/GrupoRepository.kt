@@ -317,4 +317,56 @@ class GrupoRepository(
         )
         return nombres.random()
     }
+
+    /**
+     * Guarda un match en la subcolección de matches del grupo.
+     * Un match representa contenido que varios usuarios del grupo votaron positivamente.
+     *
+     * @param grupoId ID del grupo
+     * @param match Objeto Match a guardar
+     * @return Result indicando éxito o error
+     */
+    suspend fun guardarMatch(
+        grupoId: String,
+        match: com.example.anacampospi.modelo.Match
+    ): Result<Unit> {
+        return try {
+            colGrupos
+                .document(grupoId)
+                .collection("matches")
+                .document(match.idContenido)
+                .set(match)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Actualiza un match existente añadiendo un nuevo usuario coincidente.
+     * Si el match no existe, lo crea.
+     *
+     * @param grupoId ID del grupo
+     * @param match Match a actualizar o crear
+     * @return Result indicando éxito o error
+     */
+    suspend fun actualizarMatch(
+        grupoId: String,
+        match: com.example.anacampospi.modelo.Match
+    ): Result<Unit> {
+        return try {
+            colGrupos
+                .document(grupoId)
+                .collection("matches")
+                .document(match.idContenido)
+                .set(match)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
