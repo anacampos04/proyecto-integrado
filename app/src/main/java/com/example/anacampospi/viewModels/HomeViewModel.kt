@@ -62,11 +62,22 @@ class HomeViewModel(
             val pendientes = rondasPendientesResult.getOrNull() ?: emptyList()
             val esperando = rondasEsperandoResult.getOrNull() ?: emptyList()
 
+            // Ordenar rondas: pendientes primero, luego esperando, luego activas (más recientes primero)
+            val activasOrdenadas = activas.sortedByDescending { it.creadoEn }
+            val pendientesOrdenadas = pendientes.sortedByDescending { it.creadoEn }
+            val esperandoOrdenadas = esperando.sortedByDescending { it.creadoEn }
+
+            // Prioridad: pendientes > esperando > activas
+            // Pendientes = rondas en configuración
+            // Esperando = rondas donde tu grupo te espera para configurar
+            // Activas = rondas listas para hacer swipe
+            val gruposOrdenados = pendientesOrdenadas + esperandoOrdenadas + activasOrdenadas
+
             _uiState.value = _uiState.value.copy(
-                rondasActivas = activas,
-                rondasPendientes = pendientes,
-                rondasEsperando = esperando,
-                grupos = activas + pendientes + esperando, // Mantener para compatibilidad
+                rondasActivas = activasOrdenadas,
+                rondasPendientes = pendientesOrdenadas,
+                rondasEsperando = esperandoOrdenadas,
+                grupos = gruposOrdenados, // Orden final: pendientes primero, luego activas recientes, luego esperando
                 cargando = false
             )
 
@@ -90,8 +101,20 @@ class HomeViewModel(
             result.onSuccess {
                 cargarGrupos() // Recargar lista
             }.onFailure { error ->
+                // Convertir errores técnicos a mensajes amigables
+                val mensajeAmigable = when {
+                    error.message?.contains("permission", ignoreCase = true) == true ||
+                    error.message?.contains("denied", ignoreCase = true) == true ->
+                        "No puedes eliminar esta ronda porque ya tiene votos de otros usuarios"
+                    error.message?.contains("not found", ignoreCase = true) == true ->
+                        "Esta ronda ya no existe"
+                    error.message?.contains("network", ignoreCase = true) == true ->
+                        "Error de conexión. Verifica tu internet"
+                    else -> "No se pudo eliminar la ronda. Inténtalo de nuevo"
+                }
+
                 _uiState.value = _uiState.value.copy(
-                    error = error.message
+                    error = mensajeAmigable
                 )
             }
         }

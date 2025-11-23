@@ -16,8 +16,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -128,7 +132,7 @@ fun ConfiguracionRondaScreen(
                 ) {
                     Column {
                         Text(
-                            text = if (uiState.esInvitado) "Configurar mis preferencias" else "Configurar ronda",
+                            text = if (uiState.esInvitado) "Configurar mis preferencias" else "Preparativos de la fiesta",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -161,7 +165,7 @@ fun ConfiguracionRondaScreen(
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text(
-                                text = "Nombre de la ronda (opcional)",
+                                text = "Nombre de la fiesta",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -176,7 +180,7 @@ fun ConfiguracionRondaScreen(
                                 value = nombreRonda,
                                 onValueChange = { if (it.length <= 30) nombreRonda = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Ej: Noche de Terror, Comedias Románticas...") },
+                                placeholder = { Text("Noches de sofá, Pijama party...") },
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = TealPastel,
@@ -332,12 +336,23 @@ fun ConfiguracionRondaScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "🎬 Películas",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = Color.White
-                                            )
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Movie,
+                                                    contentDescription = null,
+                                                    tint = TealPastel,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Text(
+                                                    text = "Películas",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color.White
+                                                )
+                                            }
                                             Text(
                                                 text = "Incluir películas en la ronda",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -368,12 +383,23 @@ fun ConfiguracionRondaScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            Text(
-                                                text = "📺 Series",
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = Color.White
-                                            )
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Tv,
+                                                    contentDescription = null,
+                                                    tint = TealPastel,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Text(
+                                                    text = "Series",
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = Color.White
+                                                )
+                                            }
                                             Text(
                                                 text = "Incluir series en la ronda",
                                                 style = MaterialTheme.typography.bodySmall,
@@ -468,9 +494,11 @@ fun ConfiguracionRondaScreen(
                                     .padding(16.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
-                                Text(
-                                    text = "ℹ️",
-                                    style = MaterialTheme.typography.titleLarge
+                                Icon(
+                                    imageVector = Icons.Filled.Info,
+                                    contentDescription = null,
+                                    tint = TealPastel,
+                                    modifier = Modifier.size(24.dp)
                                 )
                                 Column {
                                     Text(
@@ -506,21 +534,43 @@ fun ConfiguracionRondaScreen(
                         // Mensaje de validación si no puede iniciar
                         if (!puedeIniciarRonda && !uiState.esInvitado) {
                             if (amigosSeleccionados.isEmpty()) {
-                                Text(
-                                    text = "⚠️ Debes seleccionar al menos un amigo para crear la ronda",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = PopcornYellow,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 32.dp)
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 32.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Warning,
+                                        contentDescription = null,
+                                        tint = PopcornYellow,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Debes seleccionar al menos un amigo para crear la ronda",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PopcornYellow,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             } else if (plataformasSeleccionadas.isEmpty()) {
-                                Text(
-                                    text = "⚠️ Debes seleccionar al menos una plataforma",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = PopcornYellow,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 32.dp)
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 32.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Warning,
+                                        contentDescription = null,
+                                        tint = PopcornYellow,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Debes seleccionar al menos una plataforma",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PopcornYellow,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
 

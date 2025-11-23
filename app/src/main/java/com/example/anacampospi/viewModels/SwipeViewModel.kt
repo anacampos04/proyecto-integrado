@@ -12,6 +12,7 @@ import com.example.anacampospi.modelo.enums.TipoContenido
 import com.example.anacampospi.modelo.enums.ValorVoto
 import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.GrupoRepository
+import com.example.anacampospi.repositorio.MatchesRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.repositorio.VotoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ class SwipeViewModel : ViewModel() {
     private val authRepository = AuthRepository()
     private val usuarioRepository = UsuarioRepository()
     private val grupoRepository = GrupoRepository()
+    private val matchesRepository = MatchesRepository()
 
     private val _uiState = MutableStateFlow(SwipeUiState())
     val uiState: StateFlow<SwipeUiState> = _uiState.asStateFlow()
@@ -90,6 +92,9 @@ class SwipeViewModel : ViewModel() {
                 // Guardar los miembros del grupo para verificar matches
                 miembrosGrupo = grupo.miembros
 
+                // Cargar el número de matches del grupo
+                cargarMatchesDelGrupo(grupoId)
+
                 // Usar los filtros del grupo (ya tienen la unión de todas las configuraciones)
                 val tipos = grupo.filtros.tipos
                 val plataformas = grupo.filtros.plataformas
@@ -135,42 +140,52 @@ class SwipeViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(loading = true, error = null)
 
-            val result = tmdbRepository.discoverContent(
-                tipo = tipo,
-                plataformas = plataformas,
-                generos = generos,
-                minRating = minRating,
-                page = 1
-            )
+            contentStack.clear()
+            currentPage = 1
 
-            result.onSuccess { contenido ->
-                contentStack.clear()
-                val contenidoFiltrado = contenido.filterVotados()
-                contentStack.addAll(contenidoFiltrado)
-                currentPage = 1
+            // Intentar cargar hasta 5 páginas para encontrar contenido no votado
+            val maxPaginas = 5
+            var paginasIntentadas = 0
 
-                // Si no hay contenido después de filtrar, marcar como sin contenido
-                if (contentStack.isEmpty()) {
+            while (contentStack.size < 20 && paginasIntentadas < maxPaginas) {
+                val result = tmdbRepository.discoverContent(
+                    tipo = tipo,
+                    plataformas = plataformas,
+                    generos = generos,
+                    minRating = minRating,
+                    page = currentPage
+                )
+
+                result.onSuccess { contenido ->
+                    val contenidoFiltrado = contenido.filterVotados()
+                    contentStack.addAll(contenidoFiltrado)
+                }.onFailure { error ->
                     _uiState.value = _uiState.value.copy(
                         loading = false,
-                        error = null,
-                        sinContenido = true
+                        error = error.message ?: "Error al cargar contenido"
                     )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        contenidoActual = contentStack.firstOrNull(),
-                        contenidoRestante = contentStack.size - 1,
-                        loading = false,
-                        error = null,
-                        sinContenido = false
-                    )
+                    return@launch
                 }
+
+                currentPage++
+                paginasIntentadas++
             }
 
-            result.onFailure { error ->
+            // Si no hay contenido después de intentar varias páginas, marcar como sin contenido
+            if (contentStack.isEmpty()) {
                 _uiState.value = _uiState.value.copy(
                     loading = false,
-                    error = error.message ?: "Error al cargar contenido"
+                    error = null,
+                    sinContenido = true
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    contenidoActual = contentStack.firstOrNull(),
+                    contenidoSiguiente = contentStack.getOrNull(1), // Segunda película
+                    contenidoRestante = contentStack.size - 1,
+                    loading = false,
+                    error = null,
+                    sinContenido = false
                 )
             }
         }
@@ -358,6 +373,7 @@ class SwipeViewModel : ViewModel() {
 
         _uiState.value = _uiState.value.copy(
             contenidoActual = contentStack.firstOrNull(),
+            contenidoSiguiente = contentStack.getOrNull(1), // Actualizar siguiente película
             contenidoRestante = contentStack.size - 1,
             sinContenido = false // Resetear el flag
         )
@@ -374,18 +390,40 @@ class SwipeViewModel : ViewModel() {
      * Reinicia la sesión de swipe
      */
     fun reiniciar() {
-        // Guardar los contadores actuales antes de resetear
-        val likesActuales = _uiState.value.totalLikes
-        val dislikesActuales = _uiState.value.totalDislikes
+        // Si hay un grupo actual, reinicializar con el grupo (recarga todo)
+        currentGrupoId?.let { grupoId ->
+            inicializarConGrupo(grupoId)
+        } ?: run {
+            // Sin grupo: usar el modo manual (mantener contadores)
+            val likesActuales = _uiState.value.totalLikes
+            val dislikesActuales = _uiState.value.totalDislikes
 
-        // Resetear estado pero mantener contadores
-        _uiState.value = SwipeUiState(
-            totalLikes = likesActuales,
-            totalDislikes = dislikesActuales
-        )
+            _uiState.value = SwipeUiState(
+                totalLikes = likesActuales,
+                totalDislikes = dislikesActuales
+            )
 
-        // Recargar contenido
-        cargarContenido()
+            cargarContenido()
+        }
+    }
+
+    /**
+     * Carga el número de matches del grupo desde Firestore
+     */
+    private fun cargarMatchesDelGrupo(grupoId: String) {
+        viewModelScope.launch {
+            val result = matchesRepository.obtenerMatchesDeGrupo(grupoId)
+            result.onSuccess { matches ->
+                _uiState.value = _uiState.value.copy(
+                    totalMatchesGrupo = matches.size
+                )
+            }.onFailure {
+                // Si falla, mantener en 0
+                _uiState.value = _uiState.value.copy(
+                    totalMatchesGrupo = 0
+                )
+            }
+        }
     }
 
     /**
@@ -422,9 +460,11 @@ class SwipeViewModel : ViewModel() {
  */
 data class SwipeUiState(
     val contenidoActual: ContenidoLite? = null,
+    val contenidoSiguiente: ContenidoLite? = null, // Siguiente película para mostrar debajo
     val contenidoRestante: Int = 0,
     val totalLikes: Int = 0,
     val totalDislikes: Int = 0,
+    val totalMatchesGrupo: Int = 0, // Número real de matches del grupo
     val loading: Boolean = false,
     val error: String? = null,
     val sinContenido: Boolean = false,

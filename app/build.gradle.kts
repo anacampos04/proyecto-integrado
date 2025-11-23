@@ -101,4 +101,7 @@ dependencies {
     // (Opcional) si vas a usar Auth o Analytics:
     implementation("com.google.firebase:firebase-auth")
     //implementation("com.google.firebase:firebase-analytics")
+
+    //iconos animados
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
 }

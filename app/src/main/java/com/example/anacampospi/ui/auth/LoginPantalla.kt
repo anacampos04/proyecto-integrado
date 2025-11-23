@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -87,233 +88,239 @@ fun LoginPantalla(
         if (state.success) onSuccess()
     }
 
-    // Fondo con gradiente sutil
+    // Fondo con imagen y gradiente
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black,
-                        Night,
-                        Color.Black
-                    ),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
+            .background(Color.Black) // Fondo negro para evitar franjas blancas
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 40.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .background(Color.Black)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            // Header con imagen y gradiente
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(360.dp)
+            ) {
+                // Imagen de fondo
+                Image(
+                    painter = painterResource(id = R.drawable.login_background),
+                    contentDescription = "Movie posters background",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
 
-            // Logo con animación de entrada
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = tween(600)) +
-                        slideInVertically(
-                            initialOffsetY = { -100 },
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
+                // Gradiente de imagen a fondo negro
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.3f),
+                                    Color.Black.copy(alpha = 0.8f),
+                                    Color.Black
+                                ),
+                                startY = 0f,
+                                endY = 1200f
                             )
                         )
-            ) {
+                )
+
+                // Título sobre el gradiente
                 Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.Bottom
                 ) {
-                    // Icono de palomitas con gradiente (El Box crea el fondo)
-                    Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .shadow(
-                                elevation = 16.dp,
-                                shape = RoundedCornerShape(24.dp),
-                                ambientColor = GlowTeal,
-                                spotColor = GlowTeal
-                            )
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(
-                                brush = Brush.verticalGradient(
-                                    colors = listOf(
-                                        TealPastel,
-                                        TealDark // El gradiente azul/verde que quieres
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600)) +
+                                slideInVertically(
+                                    initialOffsetY = { -100 },
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessLow
                                     )
                                 )
-                            ),
-                        contentAlignment = Alignment.Center
                     ) {
-                        Image(
-                            // Usa el nombre de tu archivo PNG de palomitas SIN fondo
-                            painter = painterResource(id = R.drawable.popcorn_tribu_icon_clean),
-                            contentDescription = "Icono de PopCorn Tribu",
-                            modifier = Modifier
-                                .size(100.dp) // Tamaño del dibujo dentro del Box (120dp)
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "PopCornTribu",
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+
+                            Text(
+                                text = "Descubre películas y series con tus amigos",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
-
-                    Text(
-                        text = "PopCornTribu",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-
-                    Text(
-                        text = "Descubre películas y series\ncon tus amigos",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
-                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Campos de entrada con animación escalonada
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) +
-                        slideInVertically(
-                            initialOffsetY = { 100 },
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
+            // Contenido del formulario
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    // Campo de email
-                    ModernTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = "Correo electrónico",
-                        leadingIcon = Icons.Default.Email,
-                        isError = emailError != null,
-                        supportingText = emailError
-                    )
 
-                    // Campo de contraseña
-                    ModernTextField(
-                        value = pass,
-                        onValueChange = { pass = it },
-                        label = "Contraseña",
-                        leadingIcon = Icons.Default.Lock,
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    if (passwordVisible) Icons.Default.Visibility
-                                    else Icons.Default.VisibilityOff,
-                                    contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
-                                    tint = Color.White.copy(alpha = 0.6f)
+                // Campos de entrada con animación escalonada
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(600, delayMillis = 200)) +
+                            slideInVertically(
+                                initialOffsetY = { 100 },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
                                 )
-                            }
-                        },
-                        visualTransformation = if (passwordVisible)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
-                        isError = passError != null,
-                        supportingText = passError
-                    )
-
-                    // Botón de recuperar contraseña
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                            )
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        ModernTextButton(
-                            onClick = { showResetPasswordDialog = true },
-                            text = "¿Olvidaste tu contraseña?"
+                        // Campo de email
+                        ModernTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = "Correo electrónico",
+                            leadingIcon = Icons.Default.Email,
+                            isError = emailError != null,
+                            supportingText = emailError
+                        )
+
+                        // Campo de contraseña
+                        ModernTextField(
+                            value = pass,
+                            onValueChange = { pass = it },
+                            label = "Contraseña",
+                            leadingIcon = Icons.Default.Lock,
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        if (passwordVisible) Icons.Default.Visibility
+                                        else Icons.Default.VisibilityOff,
+                                        contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                                        tint = Color.White.copy(alpha = 0.6f)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible)
+                                VisualTransformation.None
+                            else
+                                PasswordVisualTransformation(),
+                            isError = passError != null,
+                            supportingText = passError
+                        )
+
+                        // Botón de recuperar contraseña
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            ModernTextButton(
+                                onClick = { showResetPasswordDialog = true },
+                                text = "¿Olvidaste tu contraseña?"
+                            )
+                        }
+                    }
+                }
+
+                // Mensajes de estado
+                AnimatedVisibility(visible = state.resetEmailSent) {
+                    ModernMessageCard(
+                        message = "Te hemos enviado un correo para recuperar tu contraseña. Revisa tu bandeja de entrada.",
+                        isError = false
+                    )
+                }
+
+                state.error?.let { error ->
+                    ModernMessageCard(
+                        message = error,
+                        isError = true
+                    )
+                }
+
+                // Botones con animación
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(600, delayMillis = 400)) +
+                            slideInVertically(
+                                initialOffsetY = { 100 },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessLow
+                                )
+                            )
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Botón de login
+                        ModernButton(
+                            onClick = { vm.login(email.trim(), pass) },
+                            text = "Iniciar sesión",
+                            enabled = !state.loading &&
+                                    email.isNotEmpty() &&
+                                    pass.isNotEmpty() &&
+                                    emailError == null &&
+                                    passError == null,
+                            loading = state.loading,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Divider
+                        ModernDivider(text = "o")
+
+                        // Botón de Google con logo
+                        GoogleSignInButton(
+                            onClick = {
+                                val intent = GoogleSignInHelper.intent(activity, webClientId)
+                                googleLauncher.launch(intent)
+                            },
+                            enabled = !state.loading
                         )
                     }
                 }
-            }
 
-            // Mensajes de estado
-            AnimatedVisibility(visible = state.resetEmailSent) {
-                ModernMessageCard(
-                    message = "✅ Te hemos enviado un correo para recuperar tu contraseña. Revisa tu bandeja de entrada.",
-                    isError = false
-                )
-            }
+                Spacer(modifier = Modifier.height(8.dp))
 
-            state.error?.let { error ->
-                ModernMessageCard(
-                    message = error,
-                    isError = true
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Botones con animación
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 400)) +
-                        slideInVertically(
-                            initialOffsetY = { 100 },
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                // Link a registro
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = fadeIn(animationSpec = tween(600, delayMillis = 600))
                 ) {
-                    // Botón de login
-                    ModernButton(
-                        onClick = { vm.login(email.trim(), pass) },
-                        text = "Iniciar sesión",
-                        enabled = !state.loading &&
-                                email.isNotEmpty() &&
-                                pass.isNotEmpty() &&
-                                emailError == null &&
-                                passError == null,
-                        loading = state.loading,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    // Divider
-                    ModernDivider(text = "o")
-
-                    // Botón de Google
-                    ModernOutlinedButton(
-                        onClick = {
-                            val intent = GoogleSignInHelper.intent(activity, webClientId)
-                            googleLauncher.launch(intent)
-                        },
-                        text = "Continuar con Google",
-                        enabled = !state.loading,
+                    ModernTextButton(
+                        onClick = onGoToRegister,
+                        text = "¿No tienes cuenta? Regístrate",
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Link a registro
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = tween(600, delayMillis = 600))
-            ) {
-                ModernTextButton(
-                    onClick = onGoToRegister,
-                    text = "¿No tienes cuenta? Regístrate",
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Spacer para llenar el espacio restante y evitar franjas blancas
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

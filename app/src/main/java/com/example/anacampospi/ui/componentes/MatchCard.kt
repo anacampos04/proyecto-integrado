@@ -40,6 +40,7 @@ import com.example.anacampospi.viewModels.MatchConGrupoConUsuarios
 fun MatchCard(
     matchData: MatchConGrupoConUsuarios,
     mostrarGrupo: Boolean = true, // False en modo grupo específico
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -49,9 +50,7 @@ fun MatchCard(
         modifier = modifier
             .fillMaxWidth()
             .height(180.dp)
-            .clickable {
-                // TODO: Navegar a pantalla de detalles??
-            },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(

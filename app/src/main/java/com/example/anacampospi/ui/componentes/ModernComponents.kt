@@ -2,7 +2,9 @@ package com.example.anacampospi.ui.componentes
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,10 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.anacampospi.R
 import com.example.anacampospi.ui.theme.*
 
 /**
@@ -47,6 +53,18 @@ fun ModernTextField(
         label = "elevation"
     )
 
+    val borderColor by animateColorAsState(
+        targetValue = if (isFocused) TealPastel else TealPastel.copy(alpha = 0.5f),
+        animationSpec = tween(300),
+        label = "borderColor"
+    )
+
+    val borderWidth by animateDpAsState(
+        targetValue = if (isFocused) 2.dp else 1.dp,
+        animationSpec = tween(300),
+        label = "borderWidth"
+    )
+
     Column(modifier = modifier) {
         TextField(
             value = value,
@@ -75,11 +93,19 @@ fun ModernTextField(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                }
                 .shadow(
                     elevation = elevation,
                     shape = RoundedCornerShape(16.dp),
                     ambientColor = if (isFocused) GlowTeal else Color.Black.copy(alpha = 0.3f),
                     spotColor = if (isFocused) GlowTeal else Color.Black.copy(alpha = 0.3f)
+                )
+                .border(
+                    width = borderWidth,
+                    color = borderColor,
+                    shape = RoundedCornerShape(16.dp)
                 )
         )
 
@@ -383,5 +409,63 @@ fun SwipeToDismissItem(
         enableDismissFromEndToStart = true
     ) {
         content()
+    }
+}
+
+/**
+ * Botón de Google Sign-In con logo de Google
+ */
+@Composable
+fun GoogleSignInButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color.White,
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = Color.White.copy(alpha = 0.4f)
+        ),
+        border = ButtonDefaults.outlinedButtonBorder.copy(
+            brush = Brush.horizontalGradient(
+                colors = listOf(
+                    TealPastel.copy(alpha = 0.5f),
+                    TealPastel.copy(alpha = 0.3f)
+                )
+            ),
+            width = 1.5.dp
+        ),
+        shape = RoundedCornerShape(16.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Logo oficial de Google (usa el archivo google_logo.png que añadiste)
+            Image(
+                painter = painterResource(id = R.drawable.google_logo),
+                contentDescription = "Google logo",
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = "Continuar con Google",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                    color = Color.White
+                )
+            )
+        }
     }
 }

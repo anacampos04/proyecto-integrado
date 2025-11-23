@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.anacampospi.BuildConfig
+import com.example.anacampospi.data.tmdb.TmdbClient
+import com.example.anacampospi.ui.componentes.ContentDetailModal
+import com.example.anacampospi.ui.componentes.ContentDetails
 import com.example.anacampospi.ui.componentes.MatchCard
 import com.example.anacampospi.viewModels.FiltroTipo
 import com.example.anacampospi.viewModels.MatchesViewModel
@@ -38,9 +42,22 @@ fun MatchesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Estado del modal de detalles
+    var selectedContent by remember { mutableStateOf<ContentDetails?>(null) }
+    val tmdbRepository = remember { TmdbClient.createRepository(BuildConfig.TMDB_API_KEY) }
+
     // Cargar matches al iniciar
     LaunchedEffect(grupoId, grupoIdInicial) {
         viewModel.cargarMatches(grupoId = grupoId, grupoIdInicial = grupoIdInicial)
+    }
+
+    // Modal de detalles
+    selectedContent?.let { content ->
+        ContentDetailModal(
+            contentDetails = content,
+            onDismiss = { selectedContent = null },
+            tmdbRepository = tmdbRepository
+        )
     }
 
     Scaffold(
@@ -205,7 +222,21 @@ fun MatchesScreen(
                             ) { matchData ->
                                 MatchCard(
                                     matchData = matchData,
-                                    mostrarGrupo = !uiState.modoGrupoEspecifico
+                                    mostrarGrupo = !uiState.modoGrupoEspecifico,
+                                    onClick = {
+                                        // Abrir modal con detalles del match
+                                        selectedContent = ContentDetails(
+                                            idContenido = matchData.match.idContenido,
+                                            titulo = matchData.match.titulo,
+                                            posterUrl = matchData.match.posterUrl,
+                                            tipo = matchData.match.tipo,
+                                            anioEstreno = matchData.match.anioEstreno,
+                                            puntuacion = matchData.match.puntuacion,
+                                            proveedores = matchData.match.proveedores,
+                                            sinopsis = null, // Se cargará en el modal
+                                            trailerKey = null // Se cargará en el modal
+                                        )
+                                    }
                                 )
                             }
                         }

@@ -220,7 +220,7 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
             Icon(
                 Icons.Default.QrCode2,
                 contentDescription = null,
-                tint = PopcornYellow,
+                tint = TealPastel,
                 modifier = Modifier.size(48.dp)
             )
 
@@ -246,13 +246,13 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
             // Código destacado
             Box(
                 modifier = Modifier
-                    .border(2.dp, PopcornYellow, RoundedCornerShape(12.dp))
+                    .border(2.dp, TealPastel, RoundedCornerShape(12.dp))
                     .padding(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(
                     text = codigo.ifBlank { "---" },
                     style = MaterialTheme.typography.headlineMedium,
-                    color = PopcornYellow,
+                    color = TealPastel,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 4.sp
                 )
@@ -303,7 +303,7 @@ fun BuscarUsuarioCard(
                 Icon(
                     Icons.Default.PersonAdd,
                     contentDescription = null,
-                    tint = PopcornYellow,
+                    tint = TealPastel,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
@@ -325,7 +325,7 @@ fun BuscarUsuarioCard(
                 Text(
                     text = "PCT-",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = PopcornYellow,
+                    color = TealPastel,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(end = 0.dp)
                 )
@@ -342,9 +342,9 @@ fun BuscarUsuarioCard(
                     modifier = Modifier.weight(1f),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PopcornYellow,
+                        focusedBorderColor = TealPastel,
                         unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
-                        focusedLabelColor = PopcornYellow,
+                        focusedLabelColor = TealPastel,
                         unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
                         focusedTextColor = Color.White,
                         unfocusedTextColor = Color.White
@@ -371,7 +371,7 @@ fun BuscarUsuarioCard(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !buscando && codigoBusqueda.removePrefix("PCT-").isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PopcornYellow,
+                    containerColor = TealPastel,
                     contentColor = Color.Black
                 )
             ) {
@@ -435,14 +435,14 @@ fun UsuarioEncontradoItem(
                 Text(
                     text = "Ya sois amigos",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = PopcornYellow
+                    color = TealPastel
                 )
             } else {
                 Button(
                     onClick = onAñadirAmigo,
                     enabled = !añadiendoAmigo,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PopcornYellow,
+                        containerColor = TealPastel,
                         contentColor = Color.Black
                     )
                 ) {
@@ -490,7 +490,7 @@ fun ListaAmigosSection(
                 Icon(
                     Icons.Default.People,
                     contentDescription = null,
-                    tint = PopcornYellow,
+                    tint = TealPastel,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
@@ -511,7 +511,7 @@ fun ListaAmigosSection(
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = PopcornYellow)
+                        CircularProgressIndicator(color = TealPastel)
                     }
                 }
 
@@ -594,13 +594,13 @@ fun AmigoItem(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(PopcornYellow.copy(alpha = 0.3f)),
+                        .background(TealPastel.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = PopcornYellow,
+                        tint = TealPastel,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -633,7 +633,7 @@ fun MensajeCard(mensaje: String, isError: Boolean) {
             containerColor = if (isError) {
                 MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
             } else {
-                PopcornYellow.copy(alpha = 0.2f)
+                TealPastel.copy(alpha = 0.2f)
             }
         ),
         shape = RoundedCornerShape(12.dp)
@@ -648,7 +648,7 @@ fun MensajeCard(mensaje: String, isError: Boolean) {
             Icon(
                 if (isError) Icons.Default.Error else Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint = if (isError) MaterialTheme.colorScheme.error else PopcornYellow
+                tint = if (isError) MaterialTheme.colorScheme.error else TealPastel
             )
             Text(
                 text = mensaje,
@@ -689,7 +689,7 @@ fun SolicitudesPendientesSection(
                 Icon(
                     Icons.Default.PersonAdd,
                     contentDescription = null,
-                    tint = PopcornYellow,
+                    tint = TealPastel,
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
@@ -750,13 +750,13 @@ fun SolicitudPendienteItem(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(PopcornYellow.copy(alpha = 0.3f)),
+                        .background(TealPastel.copy(alpha = 0.3f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = PopcornYellow,
+                        tint = TealPastel,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -800,7 +800,7 @@ fun SolicitudPendienteItem(
                     Icon(
                         Icons.Default.Check,
                         contentDescription = "Aceptar",
-                        tint = PopcornYellow
+                        tint = TealPastel
                     )
                 }
             }

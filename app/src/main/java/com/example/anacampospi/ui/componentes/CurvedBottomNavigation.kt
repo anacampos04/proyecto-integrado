@@ -105,8 +105,9 @@ fun CurvedBottomNavigation(
         ) {
             val curveWidth = with(density) { 84.dp.toPx() }
             val curveDepth = with(density) { 22.dp.toPx() }
+            val horizontalPadding = with(density) { 16.dp.toPx() }
             val itemWidth = size.width / items.size
-            // Ajuste más preciso del centro para mejor alineación visual
+            // Ajuste preciso del centro considerando el padding horizontal
             val curveCenter = itemWidth * animatedSelectedIndex + (itemWidth / 2f)
 
             val path = Path().apply {
@@ -164,7 +165,7 @@ fun CurvedBottomNavigation(
             items.forEachIndexed { index, item ->
                 val isSelected = currentRoute == item.route
                 val offsetY by animateDpAsState(
-                    targetValue = if (isSelected) (-10).dp else 0.dp,
+                    targetValue = if (isSelected) (-14).dp else 0.dp,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
                         stiffness = Spring.StiffnessMediumLow

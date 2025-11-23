@@ -3,6 +3,7 @@ package com.example.anacampospi.ui.home
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,10 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.anacampospi.R
 import com.example.anacampospi.modelo.Grupo
 import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
@@ -144,8 +147,8 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
-                    // 1. Rondas activas (listas para swipe)
-                    if (uiState.rondasActivas.isNotEmpty()) {
+                    // 1. Rondas pendientes (necesitas configurar - PRIORIDAD)
+                    if (uiState.rondasPendientes.isNotEmpty()) {
                         AnimatedVisibility(
                             visible = visible,
                             enter = fadeIn(animationSpec = tween(500, 200)) + slideInVertically(
@@ -153,16 +156,16 @@ fun HomeScreen(
                                 animationSpec = tween(500, 200)
                             )
                         ) {
-                            SeccionRondasActivas(
-                                grupos = uiState.rondasActivas,
-                                onGrupoClick = onGrupoClick,
+                            SeccionRondasPendientes(
+                                grupos = uiState.rondasPendientes,
+                                onConfigurarClick = onConfigurarRonda,
                                 onEliminar = { viewModel.eliminarGrupo(it) }
                             )
                         }
                     }
 
-                    // 2. Rondas pendientes (necesitas configurar)
-                    if (uiState.rondasPendientes.isNotEmpty()) {
+                    // 2. Rondas activas (listas para swipe)
+                    if (uiState.rondasActivas.isNotEmpty()) {
                         AnimatedVisibility(
                             visible = visible,
                             enter = fadeIn(animationSpec = tween(500, 250)) + slideInVertically(
@@ -170,9 +173,9 @@ fun HomeScreen(
                                 animationSpec = tween(500, 250)
                             )
                         ) {
-                            SeccionRondasPendientes(
-                                grupos = uiState.rondasPendientes,
-                                onConfigurarClick = onConfigurarRonda,
+                            SeccionRondasActivas(
+                                grupos = uiState.rondasActivas,
+                                onGrupoClick = onGrupoClick,
                                 onEliminar = { viewModel.eliminarGrupo(it) }
                             )
                         }
@@ -200,7 +203,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
         }
 
-        // Mensaje de error
+        // Mensaje de error tipo toast
         uiState.error?.let { error ->
             Box(
                 modifier = Modifier
@@ -208,17 +211,34 @@ fun HomeScreen(
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
             ) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp)
+                androidx.compose.material3.Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    color = androidx.compose.ui.graphics.Color(0xFF2C2C2E),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(
-                        text = error,
+                    Row(
                         modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.error
-                    )
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.Info,
+                            contentDescription = null,
+                            tint = androidx.compose.ui.graphics.Color(0xFFFFCC00),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = androidx.compose.ui.graphics.Color.White,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -490,10 +510,10 @@ fun GrupoItem(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Filled.Groups,
+                        painter = painterResource(id = R.drawable.ic_popcorn),
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 

@@ -4,11 +4,15 @@ package com.example.anacampospi.ui.auth
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.anacampospi.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -58,11 +62,18 @@ fun RegistroPantalla(
     }
 
     val passError = remember(pass) {
-        when {
-            pass.isEmpty() -> null
-            pass.length < 6 -> "Mínimo 6 caracteres"
-            !pass.any { it.isDigit() } -> "Debe contener al menos un número"
-            else -> null
+        if (pass.isEmpty()) {
+            null
+        } else {
+            val errors = mutableListOf<String>()
+            if (pass.length < 6) errors.add("mínimo 6 caracteres")
+            if (!pass.any { it.isDigit() }) errors.add("al menos un número")
+
+            if (errors.isNotEmpty()) {
+                "Falta: ${errors.joinToString(", ")}"
+            } else {
+                null
+            }
         }
     }
 
@@ -87,102 +98,123 @@ fun RegistroPantalla(
         }
     }
 
-    // Fondo con gradiente sutil
+    // Fondo con imagen y gradiente
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black,
-                        Night,
-                        Color.Black
-                    ),
-                    startY = 0f,
-                    endY = 1500f
-                )
-            )
+            .background(Color.Black) // Fondo negro para evitar franjas blancas
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .background(Color.Black)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Bar
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(animationSpec = tween(400)) + slideInVertically(initialOffsetY = { -it })
+            // Header con imagen y gradiente + TopBar superpuesto
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp)
             ) {
+                // Imagen de fondo
+                Image(
+                    painter = painterResource(id = R.drawable.login_background),
+                    contentDescription = "Movie posters background",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                // Gradiente de imagen a fondo negro
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Black.copy(alpha = 0.4f))
-                        .padding(horizontal = 8.dp, vertical = 12.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.3f),
+                                    Color.Black.copy(alpha = 0.8f),
+                                    Color.Black
+                                ),
+                                startY = 0f,
+                                endY = 900f
+                            )
+                        )
+                )
+
+                // Top Bar superpuesto con fondo más transparente
+                if (visible) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Transparent)
+                            .padding(horizontal = 8.dp, vertical = 12.dp)
                     ) {
-                        IconButton(onClick = onGoToLogin) {
-                            Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Volver",
-                                tint = Color.White
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            IconButton(onClick = onGoToLogin) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Volver",
+                                    tint = Color.White
+                                )
+                            }
+                            Text(
+                                text = "Crear cuenta",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(start = 8.dp)
                             )
                         }
-                        Text(
-                            text = "Crear cuenta",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                    }
+                }
+
+                // Título sobre el gradiente
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    if (visible) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "¡Únete a PopCornTribu!",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                text = "Crea tu cuenta para empezar a descubrir contenido con tus amigos",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            // Contenido principal
+            // Contenido del formulario
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                    .background(Color.Black)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header con animación
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(animationSpec = tween(600, delayMillis = 100)) +
-                            slideInVertically(
-                                initialOffsetY = { -50 },
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            )
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "¡Únete a PopCornTribu! 🎬",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Text(
-                            text = "Crea tu cuenta para empezar a descubrir\ncontenido con tus amigos",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
 
                 // Campos de entrada con animación escalonada
                 AnimatedVisibility(
@@ -265,43 +297,6 @@ fun RegistroPantalla(
                             isError = confirmPassError != null,
                             supportingText = confirmPassError
                         )
-                    }
-                }
-
-                // Card de requisitos con animación
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(animationSpec = tween(600, delayMillis = 300)) +
-                            expandVertically()
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(16.dp),
-                                ambientColor = TealPastel.copy(alpha = 0.2f)
-                            ),
-                        colors = CardDefaults.cardColors(
-                            containerColor = SurfaceLight.copy(alpha = 0.6f)
-                        ),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "Requisitos de contraseña:",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White
-                            )
-                            ModernRequisitoItem("Mínimo 6 caracteres", pass.length >= 6)
-                            ModernRequisitoItem("Al menos un número", pass.any { it.isDigit() })
-                        }
                     }
                 }
 
