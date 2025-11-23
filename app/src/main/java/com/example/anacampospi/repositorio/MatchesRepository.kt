@@ -21,8 +21,18 @@ class MatchesRepository(
      */
     suspend fun obtenerMatchesDeGrupo(grupoId: String): Result<List<MatchConGrupo>> {
         return try {
-            val snapshot = db.collection("grupos")
+            // Obtener el documento del grupo para las plataformas
+            val grupoDoc = db.collection("grupos")
                 .document(grupoId)
+                .get()
+                .await()
+
+            val filtrosMap = grupoDoc.get("filtros") as? Map<*, *>
+            val plataformasGrupo = (filtrosMap?.get("plataformas") as? List<*>)
+                ?.mapNotNull { it as? String } ?: emptyList()
+
+            // Obtener matches
+            val snapshot = grupoDoc.reference
                 .collection("matches")
                 .orderBy("primerCoincidenteEn", Query.Direction.DESCENDING)
                 .get()
@@ -33,7 +43,8 @@ class MatchesRepository(
                     MatchConGrupo(
                         match = match,
                         grupoId = grupoId,
-                        grupoNombre = "" // Se llenará después
+                        grupoNombre = "", // Se llenará después
+                        plataformasGrupo = plataformasGrupo
                     )
                 }
             }
@@ -65,6 +76,11 @@ class MatchesRepository(
                 val grupoId = grupoDoc.id
                 val grupoNombre = grupoDoc.getString("nombre") ?: "Grupo sin nombre"
 
+                // Obtener las plataformas seleccionadas por el grupo
+                val filtrosMap = grupoDoc.get("filtros") as? Map<*, *>
+                val plataformasGrupo = (filtrosMap?.get("plataformas") as? List<*>)
+                    ?.mapNotNull { it as? String } ?: emptyList()
+
                 val matchesSnapshot = grupoDoc.reference
                     .collection("matches")
                     .get()
@@ -75,7 +91,8 @@ class MatchesRepository(
                         MatchConGrupo(
                             match = match,
                             grupoId = grupoId,
-                            grupoNombre = grupoNombre
+                            grupoNombre = grupoNombre,
+                            plataformasGrupo = plataformasGrupo
                         )
                     }
                 }
@@ -121,7 +138,8 @@ class MatchesRepository(
 data class MatchConGrupo(
     val match: Match,
     val grupoId: String,
-    val grupoNombre: String
+    val grupoNombre: String,
+    val plataformasGrupo: List<String> = emptyList() // Plataformas seleccionadas por el grupo
 ) {
     /**
      * Verifica si todos los miembros del grupo coincidieron en este match.

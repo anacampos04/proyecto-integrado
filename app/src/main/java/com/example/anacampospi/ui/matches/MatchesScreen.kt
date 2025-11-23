@@ -8,7 +8,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,24 +68,15 @@ fun MatchesScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = if (grupoId != null && grupoNombre != null) {
-                                "Matches: $grupoNombre"
-                            } else {
-                                "Mis Matches"
-                            },
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (!uiState.modoGrupoEspecifico && uiState.matches.isNotEmpty()) {
-                            Text(
-                                text = "${uiState.matches.size} ${if (uiState.matches.size == 1) "match" else "matches"}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Text(
+                        text = if (grupoId != null && grupoNombre != null) {
+                            "Matches: $grupoNombre"
+                        } else {
+                            "Mis Matches"
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -233,6 +228,7 @@ fun MatchesScreen(
                                             anioEstreno = matchData.match.anioEstreno,
                                             puntuacion = matchData.match.puntuacion,
                                             proveedores = matchData.match.proveedores,
+                                            plataformasGrupo = matchData.plataformasGrupo,
                                             sinopsis = null, // Se cargará en el modal
                                             trailerKey = null // Se cargará en el modal
                                         )
@@ -265,37 +261,21 @@ private fun FiltrosGrupoChips(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Chip "Todos"
+        // Chip "Todos" sin icono check y más redondeado
         FilterChip(
             selected = grupoSeleccionado == null,
             onClick = { onGrupoSeleccionado(null) },
             label = { Text("Todos") },
-            leadingIcon = {
-                if (grupoSeleccionado == null) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
+            shape = RoundedCornerShape(20.dp)
         )
 
-        // Chips de grupos
+        // Chips de grupos sin icono check y más redondeados
         grupos.forEach { grupo ->
             FilterChip(
                 selected = grupoSeleccionado == grupo.id,
                 onClick = { onGrupoSeleccionado(grupo.id) },
                 label = { Text(grupo.nombre) },
-                leadingIcon = {
-                    if (grupoSeleccionado == grupo.id) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
+                shape = RoundedCornerShape(20.dp)
             )
         }
     }
@@ -331,9 +311,28 @@ private fun FiltrosTipoPestanas(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         when (filtro) {
-                            FiltroTipo.TODOS -> Text("🎬📺")
-                            FiltroTipo.PELICULAS -> Text("🎬")
-                            FiltroTipo.SERIES -> Text("📺")
+                            FiltroTipo.TODOS -> {
+                                Icon(
+                                    imageVector = Icons.Outlined.Movie,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Icon(
+                                    imageVector = Icons.Outlined.Tv,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            FiltroTipo.PELICULAS -> Icon(
+                                imageVector = Icons.Outlined.Movie,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            FiltroTipo.SERIES -> Icon(
+                                imageVector = Icons.Outlined.Tv,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                         Text(label)
                     }

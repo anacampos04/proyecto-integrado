@@ -91,6 +91,7 @@ class SwipeViewModel : ViewModel() {
 
                 // Guardar los miembros del grupo para verificar matches
                 miembrosGrupo = grupo.miembros
+                android.util.Log.d("SwipeViewModel", "Grupo cargado. Miembros: $miembrosGrupo (total: ${miembrosGrupo.size})")
 
                 // Cargar el número de matches del grupo
                 cargarMatchesDelGrupo(grupoId)

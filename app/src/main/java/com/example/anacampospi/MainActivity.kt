@@ -21,7 +21,7 @@ import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.ui.auth.LoginPantalla
 import com.example.anacampospi.ui.auth.RegistroPantalla
-import com.example.anacampospi.ui.componentes.CurvedBottomNavigation
+import com.example.anacampospi.ui.componentes.CurvedNavigationBar
 import com.example.anacampospi.ui.componentes.DefaultNavItems
 import com.example.anacampospi.ui.amigos.AmigosScreen
 import com.example.anacampospi.ui.config.ConfiguracionRondaScreen
@@ -148,7 +148,7 @@ fun MainScreenWithNavigation(
 
     Scaffold(
         bottomBar = {
-            CurvedBottomNavigation(
+            CurvedNavigationBar(
                 items = DefaultNavItems.items,
                 currentRoute = currentRoute,
                 onNavigate = { route ->

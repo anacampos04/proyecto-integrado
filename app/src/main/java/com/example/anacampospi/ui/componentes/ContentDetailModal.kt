@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.Tv
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,7 @@ import coil.compose.AsyncImage
 import com.example.anacampospi.data.tmdb.TmdbRepository
 import com.example.anacampospi.modelo.PlataformasCatalogo
 import com.example.anacampospi.modelo.enums.TipoContenido
+import com.example.anacampospi.ui.theme.TealPastel
 import kotlinx.coroutines.launch
 
 /**
@@ -43,6 +46,7 @@ data class ContentDetails(
     val anioEstreno: Int,
     val puntuacion: Double,
     val proveedores: List<String>,
+    val plataformasGrupo: List<String> = emptyList(), // Plataformas seleccionadas por el grupo
     val sinopsis: String? = null,
     val trailerKey: String? = null
 )
@@ -207,16 +211,30 @@ fun ContentDetailModal(
                                     TipoContenido.SERIE -> MaterialTheme.colorScheme.secondary
                                 }
                             ) {
-                                Text(
-                                    text = when (detallesCompletos.tipo) {
-                                        TipoContenido.PELICULA -> "🎬 Película"
-                                        TipoContenido.SERIE -> "📺 Serie"
-                                    },
+                                Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = when (detallesCompletos.tipo) {
+                                            TipoContenido.PELICULA -> Icons.Outlined.Movie
+                                            TipoContenido.SERIE -> Icons.Outlined.Tv
+                                        },
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                    Text(
+                                        text = when (detallesCompletos.tipo) {
+                                            TipoContenido.PELICULA -> "Película"
+                                            TipoContenido.SERIE -> "Serie"
+                                        },
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
                             }
 
                             // Título
@@ -312,19 +330,22 @@ fun ContentDetailModal(
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFFF0000) // Rojo de YouTube
+                                        containerColor = TealPastel, // Azul del tema
+                                        contentColor = Color.Black
                                     )
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.PlayArrow,
                                         contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
+                                        tint = Color.Black
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        "Ver Trailer en YouTube",
+                                        "Ver trailer",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
                                     )
                                 }
                             }
@@ -349,7 +370,7 @@ fun ContentDetailModal(
                             }
                         }
 
-                        // Plataformas disponibles
+                        // Plataformas disponibles (desde el match guardado en Firestore)
                         if (detallesCompletos.proveedores.isNotEmpty()) {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -370,11 +391,11 @@ fun ContentDetailModal(
                                             horizontalAlignment = Alignment.CenterHorizontally,
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
                                         ) {
-                                            Surface(
-                                                modifier = Modifier.size(48.dp),
-                                                shape = RoundedCornerShape(8.dp),
-                                                color = Color.White,
-                                                tonalElevation = 2.dp
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(48.dp)
+                                                    .clip(RoundedCornerShape(8.dp)),
+                                                contentAlignment = Alignment.Center
                                             ) {
                                                 androidx.compose.foundation.Image(
                                                     painter = painterResource(id = plataforma.icono),

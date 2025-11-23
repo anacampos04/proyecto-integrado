@@ -100,25 +100,36 @@ class MatchesViewModel : ViewModel() {
 
     /**
      * Carga la información de los usuarios que coincidieron en cada match.
+     * OPTIMIZADO: Carga cada usuario único solo una vez (sin duplicados).
      */
     private suspend fun cargarInfoUsuarios(
         matchesList: List<MatchConGrupo>
     ): List<MatchConGrupoConUsuarios> {
-        return matchesList.map { matchConGrupo ->
-            val usuariosInfo = mutableListOf<Usuario>()
+        // 1. Extraer todos los UIDs únicos de todos los matches
+        val todosLosUids = matchesList
+            .flatMap { it.match.usuariosCoincidentes }
+            .distinct()
 
-            for (uid in matchConGrupo.match.usuariosCoincidentes) {
-                val result = usuarioRepository.getUsuario(uid)
-                result.onSuccess { usuario ->
-                    usuariosInfo.add(usuario)
-                }
+        // 2. Cargar usuarios únicos (cada uno solo una vez) y guardarlos en un mapa
+        val usuariosMap = mutableMapOf<String, Usuario>()
+        for (uid in todosLosUids) {
+            val result = usuarioRepository.getUsuario(uid)
+            result.onSuccess { usuario ->
+                usuariosMap[uid] = usuario
             }
+        }
+
+        // 3. Mapear matches con la info de usuarios desde la caché local
+        return matchesList.map { matchConGrupo ->
+            val usuariosInfo = matchConGrupo.match.usuariosCoincidentes
+                .mapNotNull { uid -> usuariosMap[uid] } // Obtener usuarios del mapa
 
             MatchConGrupoConUsuarios(
                 match = matchConGrupo.match,
                 grupoId = matchConGrupo.grupoId,
                 grupoNombre = matchConGrupo.grupoNombre,
-                usuariosInfo = usuariosInfo
+                usuariosInfo = usuariosInfo,
+                plataformasGrupo = matchConGrupo.plataformasGrupo
             )
         }
     }
@@ -195,7 +206,8 @@ data class MatchConGrupoConUsuarios(
     val match: Match,
     val grupoId: String,
     val grupoNombre: String,
-    val usuariosInfo: List<Usuario>
+    val usuariosInfo: List<Usuario>,
+    val plataformasGrupo: List<String> = emptyList() // Plataformas seleccionadas por el grupo
 ) {
     /**
      * Verifica si todos los usuarios coincidieron (unanimidad).

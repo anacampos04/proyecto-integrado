@@ -160,10 +160,16 @@ class VotoRepository {
                 doc.toObject(Voto::class.java)?.idUsuario
             }.toSet()
 
+            android.util.Log.d("VotoRepository", "Verificando match para contenido $idContenido")
+            android.util.Log.d("VotoRepository", "Total miembros del grupo: ${todosMiembrosGrupo.size} -> $todosMiembrosGrupo")
+            android.util.Log.d("VotoRepository", "Usuarios que votaron LIKE: ${usuariosQueVotaronLike.size} -> $usuariosQueVotaronLike")
+
             // MATCH solo si TODOS los miembros del grupo votaron ME_GUSTA
             val hayMatch = todosMiembrosGrupo.all { miembroId ->
                 usuariosQueVotaronLike.contains(miembroId)
             }
+
+            android.util.Log.d("VotoRepository", "¿Hay match? $hayMatch")
 
             Result.success(hayMatch)
         } catch (e: Exception) {

@@ -60,7 +60,7 @@ fun MatchCard(
         Row(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Poster a la izquierda
+            // Poster a la izquierda (sin badge de tipo)
             Box(
                 modifier = Modifier
                     .width(120.dp)
@@ -89,27 +89,6 @@ fun MatchCard(
                         )
                     }
                 }
-
-                // Badge de tipo (película/serie) en esquina superior izquierda
-                Surface(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .align(Alignment.TopStart),
-                    shape = RoundedCornerShape(8.dp),
-                    color = when (match.tipo) {
-                        TipoContenido.PELICULA -> MaterialTheme.colorScheme.primary
-                        TipoContenido.SERIE -> MaterialTheme.colorScheme.secondary
-                    }
-                ) {
-                    Text(
-                        text = when (match.tipo) {
-                            TipoContenido.PELICULA -> "🎬"
-                            TipoContenido.SERIE -> "📺"
-                        },
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
-                        fontSize = 14.sp
-                    )
-                }
             }
 
             // Información a la derecha
@@ -119,7 +98,7 @@ fun MatchCard(
                     .padding(12.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Título y año
+                // Título, año y badge del grupo
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -168,98 +147,50 @@ fun MatchCard(
                     // Badge del grupo (solo en modo general)
                     if (mostrarGrupo) {
                         Surface(
-                            modifier = Modifier.padding(top = 4.dp),
+                            modifier = Modifier.padding(top = 2.dp),
                             shape = RoundedCornerShape(8.dp),
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
-                            Row(
+                            Text(
+                                text = matchData.grupoNombre,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Group,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = matchData.grupoNombre,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
 
-                // Usuarios coincidentes y proveedores
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                // Usuarios coincidentes
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Usuarios coincidentes
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "👥",
-                            fontSize = 14.sp
-                        )
-                        Text(
-                            text = if (matchData.usuariosInfo.isNotEmpty()) {
-                                val nombres = matchData.usuariosInfo.take(3).map { it.nombre }
-                                val texto = nombres.joinToString(", ")
-                                if (matchData.usuariosInfo.size > 3) {
-                                    "$texto +${matchData.usuariosInfo.size - 3}"
-                                } else {
-                                    texto
-                                }
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = if (matchData.usuariosInfo.isNotEmpty()) {
+                            val nombres = matchData.usuariosInfo.take(3).map { it.nombre }
+                            val texto = nombres.joinToString(", ")
+                            if (matchData.usuariosInfo.size > 3) {
+                                "$texto +${matchData.usuariosInfo.size - 3}"
                             } else {
-                                "${match.usuariosCoincidentes.size} usuarios"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    // Proveedores disponibles
-                    if (match.proveedores.isNotEmpty()) {
-                        val plataformas = PlataformasCatalogo.getPlataformas(match.proveedores)
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            plataformas.take(4).forEach { plataforma ->
-                                Surface(
-                                    modifier = Modifier.size(24.dp),
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = Color.White
-                                ) {
-                                    androidx.compose.foundation.Image(
-                                        painter = painterResource(id = plataforma.icono),
-                                        contentDescription = "Logo ${plataforma.nombre}",
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(2.dp),
-                                        contentScale = ContentScale.Fit
-                                    )
-                                }
+                                texto
                             }
-
-                            if (plataformas.size > 4) {
-                                Text(
-                                    text = "+${plataformas.size - 4}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
+                        } else {
+                            "${match.usuariosCoincidentes.size} usuarios"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
