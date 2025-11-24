@@ -33,7 +33,7 @@ import com.example.anacampospi.viewModels.AmigosViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AmigosScreen(
-    viewModel: AmigosViewModel = viewModel()
+    viewModel: AmigosViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var codigoBusqueda by remember { mutableStateOf("PCT-") }

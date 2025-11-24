@@ -25,7 +25,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.anacampospi.R
+import com.example.anacampospi.ui.theme.CinemaRed
 import com.example.anacampospi.ui.theme.Night
 import com.example.anacampospi.ui.theme.TealPastel
 
@@ -43,20 +45,23 @@ sealed class NavIcon {
 data class CurvedNavItem(
     val route: String,
     val icon: NavIcon,
-    val label: String
+    val label: String,
+    val badgeCount: Int = 0 // Contador para el badge
 ) {
     // Constructor de conveniencia para ImageVector
-    constructor(route: String, imageVector: ImageVector, label: String) : this(
+    constructor(route: String, imageVector: ImageVector, label: String, badgeCount: Int = 0) : this(
         route,
         NavIcon.Vector(imageVector),
-        label
+        label,
+        badgeCount
     )
 
     // Constructor de conveniencia para Drawable
-    constructor(route: String, @DrawableRes drawableRes: Int, label: String) : this(
+    constructor(route: String, @DrawableRes drawableRes: Int, label: String, badgeCount: Int = 0) : this(
         route,
         NavIcon.Drawable(drawableRes),
-        label
+        label,
+        badgeCount
     )
 }
 
@@ -233,26 +238,50 @@ fun CurvedNavigationBar(
                         ) { onNavigate(item.route) },
                     contentAlignment = Alignment.Center
                 ) {
-                    // Renderizar icono con animación de escala y alpha
-                    when (val icon = item.icon) {
-                        is NavIcon.Vector -> Icon(
-                            imageVector = icon.imageVector,
-                            contentDescription = item.label,
-                            tint = Color.White.copy(alpha = 0.6f),
-                            modifier = Modifier
-                                .size(26.dp)
-                                .scale(iconScale)
-                                .alpha(iconScale)
-                        )
-                        is NavIcon.Drawable -> Icon(
-                            painter = painterResource(id = icon.resId),
-                            contentDescription = item.label,
-                            tint = Color.White.copy(alpha = 0.6f),
-                            modifier = Modifier
-                                .size(30.dp)
-                                .scale(iconScale)
-                                .alpha(iconScale)
-                        )
+                    // Box contenedor del icono + badge
+                    Box {
+                        // Renderizar icono con animación de escala y alpha
+                        when (val icon = item.icon) {
+                            is NavIcon.Vector -> Icon(
+                                imageVector = icon.imageVector,
+                                contentDescription = item.label,
+                                tint = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .scale(iconScale)
+                                    .alpha(iconScale)
+                            )
+                            is NavIcon.Drawable -> Icon(
+                                painter = painterResource(id = icon.resId),
+                                contentDescription = item.label,
+                                tint = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .scale(iconScale)
+                                    .alpha(iconScale)
+                            )
+                        }
+
+                        // Badge para notificaciones (solo si no está seleccionado y tiene count > 0)
+                        if (item.badgeCount > 0 && index != selectedIndex) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 4.dp, y = (-4).dp)
+                                    .size(16.dp)
+                                    .background(CinemaRed, CircleShape)
+                                    .scale(iconScale)
+                                    .alpha(iconScale),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                androidx.compose.material3.Text(
+                                    text = if (item.badgeCount > 9) "9+" else item.badgeCount.toString(),
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }

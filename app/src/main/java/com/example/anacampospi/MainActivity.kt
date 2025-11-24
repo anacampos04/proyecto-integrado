@@ -22,6 +22,7 @@ import com.example.anacampospi.repositorio.UsuarioRepository
 import com.example.anacampospi.ui.auth.LoginPantalla
 import com.example.anacampospi.ui.auth.RegistroPantalla
 import com.example.anacampospi.ui.componentes.CurvedNavigationBar
+import com.example.anacampospi.ui.componentes.CurvedNavItem
 import com.example.anacampospi.ui.componentes.DefaultNavItems
 import com.example.anacampospi.ui.amigos.AmigosScreen
 import com.example.anacampospi.ui.config.ConfiguracionRondaScreen
@@ -30,6 +31,7 @@ import com.example.anacampospi.ui.matches.MatchesScreen
 import com.example.anacampospi.ui.perfil.PerfilScreen
 import com.example.anacampospi.ui.swipe.SwipeScreen
 import com.example.anacampospi.ui.theme.PopCornTribuTheme
+import com.example.anacampospi.viewModels.AmigosViewModel
 import com.example.anacampospi.viewModels.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -128,6 +130,10 @@ fun MainScreenWithNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val actualRoute = navBackStackEntry?.destination?.route ?: "home"
 
+    // ViewModel para obtener el contador de solicitudes pendientes
+    val amigosViewModel: AmigosViewModel = viewModel()
+    val amigosState by amigosViewModel.uiState.collectAsState()
+
     // Mapear rutas internas a rutas de la navbar
     val mappedRoute = when {
         // Configuración y swipe -> marcar "swipe" en navbar
@@ -146,10 +152,25 @@ fun MainScreenWithNavigation(
     val navItemRoutes = DefaultNavItems.items.map { it.route }
     val currentRoute = if (mappedRoute in navItemRoutes) mappedRoute else "home"
 
+    // Crear lista de items con badge actualizado para "amigos"
+    val navItemsWithBadge = DefaultNavItems.items.map { item ->
+        if (item.route == "amigos") {
+            // Actualizar el badgeCount para el botón de amigos
+            CurvedNavItem(
+                route = item.route,
+                icon = item.icon,
+                label = item.label,
+                badgeCount = amigosState.solicitudesPendientes.size
+            )
+        } else {
+            item
+        }
+    }
+
     Scaffold(
         bottomBar = {
             CurvedNavigationBar(
-                items = DefaultNavItems.items,
+                items = navItemsWithBadge,
                 currentRoute = currentRoute,
                 onNavigate = { route ->
                     // Navegación desde la navbar: siempre debe funcionar correctamente
@@ -273,7 +294,7 @@ fun MainScreenWithNavigation(
                 }
 
                 composable("amigos") {
-                    AmigosScreen()
+                    AmigosScreen(viewModel = amigosViewModel)
                 }
 
                 composable("swipe") {

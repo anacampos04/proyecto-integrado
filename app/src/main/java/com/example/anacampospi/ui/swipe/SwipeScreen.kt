@@ -385,20 +385,44 @@ fun SwipeScreen(
 
             // Mostrar tarjeta
             uiState.contenidoActual != null -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 16.dp, top = 80.dp, end = 16.dp, bottom = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    // Box para apilar las cards (siguiente card debajo)
-                    Box(
+                    val screenHeight = maxHeight
+                    val screenWidth = maxWidth
+
+                    // Reservar espacio fijo para elementos UI
+                    val topBarHeight = 80.dp
+                    val bottomButtonsHeight = 100.dp // Botones + espaciado
+                    val verticalPadding = 32.dp // Padding superior e inferior de la card
+
+                    // Calcular espacio disponible para la card
+                    val availableHeight = screenHeight - topBarHeight - bottomButtonsHeight - verticalPadding
+
+                    // Calcular dimensiones de la card respetando aspect ratio y límites
+                    val cardHeight = availableHeight.coerceAtMost(700.dp).coerceAtLeast(300.dp)
+                    val cardWidthFromHeight = (cardHeight.value * 0.65f).dp
+                    val cardWidth = cardWidthFromHeight
+                        .coerceAtMost(screenWidth - 32.dp) // Padding horizontal
+                        .coerceAtMost(500.dp) // Límite máximo en tablets
+
+                    Column(
                         modifier = Modifier
-                            .weight(1f, fill = false)
-                            .padding(top = 8.dp, bottom = 16.dp),
-                        contentAlignment = Alignment.Center
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceBetween
                     ) {
+                        // Spacer superior
+                        Spacer(modifier = Modifier.height(topBarHeight))
+
+                        // Box para las cards centrado
+                        Box(
+                            modifier = Modifier
+                                .width(cardWidth)
+                                .height(cardHeight),
+                            contentAlignment = Alignment.Center
+                        ) {
                         // Segunda card (siguiente película) - mostrar solo si hay siguiente contenido
                         uiState.contenidoSiguiente?.let { siguienteContenido ->
                             Card(
@@ -445,46 +469,48 @@ fun SwipeScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Botones de acción
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 32.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Botón NO ME GUSTA
-                        FloatingActionButton(
-                            onClick = { viewModel.onSwipeLeft() },
-                            containerColor = CinemaRed.copy(alpha = 0.2f),
-                            contentColor = CinemaRed,
-                            modifier = Modifier.size(72.dp),
-                            shape = CircleShape
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "No me gusta",
-                                modifier = Modifier.size(36.dp)
-                            )
                         }
 
-                        // Botón ME GUSTA
-                        FloatingActionButton(
-                            onClick = { viewModel.onSwipeRight() },
-                            containerColor = TealPastel,
-                            contentColor = Color.Black,
-                            modifier = Modifier.size(72.dp),
-                            shape = CircleShape
+                        // Spacer flexible para empujar los botones hacia abajo
+                        Spacer(modifier = Modifier.weight(0.1f))
+
+                        // Botones de acción
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp, vertical = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Favorite,
-                                contentDescription = "Me gusta",
-                                modifier = Modifier.size(36.dp)
-                            )
+                            // Botón NO ME GUSTA
+                            FloatingActionButton(
+                                onClick = { viewModel.onSwipeLeft() },
+                                containerColor = CinemaRed.copy(alpha = 0.2f),
+                                contentColor = CinemaRed,
+                                modifier = Modifier.size(72.dp),
+                                shape = CircleShape
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "No me gusta",
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+
+                            // Botón ME GUSTA
+                            FloatingActionButton(
+                                onClick = { viewModel.onSwipeRight() },
+                                containerColor = TealPastel,
+                                contentColor = Color.Black,
+                                modifier = Modifier.size(72.dp),
+                                shape = CircleShape
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Favorite,
+                                    contentDescription = "Me gusta",
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
                         }
                     }
                 }
