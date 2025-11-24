@@ -100,10 +100,10 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **🎯 Objetivo:** Matches y diseño final  
 
 **Tareas:**
-- [ ] Pantalla de matches  
+- [x] Pantalla de matches  
 - [x] Detectar matches  
 - [ ] Documentación v4  
-- [ ] Pulir diseño general  
+- [x] Pulir diseño general  
 
 **Entrega quincenal:**  
 - ✅ Matches funcionales  
