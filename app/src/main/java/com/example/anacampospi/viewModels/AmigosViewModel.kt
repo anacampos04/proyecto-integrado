@@ -323,6 +323,13 @@ class AmigosViewModel(
             yaSonAmigos = false
         )
     }
+
+    /**
+     * Limpia el error de amigos.
+     */
+    fun limpiarErrorAmigos() {
+        _uiState.value = _uiState.value.copy(errorAmigos = null)
+    }
 }
 
 /**

@@ -38,12 +38,13 @@ fun AmigosScreen(
     val uiState by viewModel.uiState.collectAsState()
     var codigoBusqueda by remember { mutableStateOf("PCT-") }
     var visible by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         visible = true
     }
 
-    // Mostrar mensajes de éxito/error
+    // Mostrar mensajes de éxito/error de búsqueda
     LaunchedEffect(uiState.mensajeExito, uiState.errorBusqueda) {
         if (uiState.mensajeExito != null || uiState.errorBusqueda != null) {
             kotlinx.coroutines.delay(3000)
@@ -51,24 +52,53 @@ fun AmigosScreen(
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Black,
-                        Night,
-                        Color.Black
-                    )
-                )
+    // Mostrar error de amigos como Snackbar
+    LaunchedEffect(uiState.errorAmigos) {
+        uiState.errorAmigos?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Short
             )
-    ) {
-        Column(
+            kotlinx.coroutines.delay(2000)
+            viewModel.limpiarErrorAmigos()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = CinemaRed.copy(alpha = 0.9f),
+                        contentColor = Color.White,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            )
+        },
+        containerColor = Color.Transparent
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black,
+                            Night,
+                            Color.Black
+                        )
+                    )
+                )
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+            ) {
             // Top bar
             AnimatedVisibility(
                 visible = visible,
@@ -190,12 +220,12 @@ fun AmigosScreen(
                 ListaAmigosSection(
                     amigos = uiState.amigos,
                     cargando = uiState.cargandoAmigos,
-                    error = uiState.errorAmigos,
                     onEliminar = { viewModel.eliminarAmigo(it) }
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+            }
         }
     }
 }
@@ -466,7 +496,6 @@ fun UsuarioEncontradoItem(
 fun ListaAmigosSection(
     amigos: List<Usuario>,
     cargando: Boolean,
-    error: String?,
     onEliminar: (String) -> Unit
 ) {
     Card(
@@ -513,14 +542,6 @@ fun ListaAmigosSection(
                     ) {
                         CircularProgressIndicator(color = TealPastel)
                     }
-                }
-
-                error != null -> {
-                    Text(
-                        text = "Error: $error",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
                 }
 
                 amigos.isEmpty() -> {

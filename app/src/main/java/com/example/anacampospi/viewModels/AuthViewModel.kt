@@ -36,6 +36,11 @@ class AuthViewModel(
         _state.value = AuthUiState()
     }
 
+    // Limpiar el error (para auto-dismiss)
+    fun clearError() {
+        _state.value = _state.value.copy(error = null)
+    }
+
     //Registro con email/contraseña + creación/actualización de doc en /usuarios.
     fun register(email: String, password: String, nombre: String) = op {
         try {
@@ -122,27 +127,27 @@ class AuthViewModel(
                 "ERROR_INVALID_EMAIL",
                 "ERROR_WRONG_PASSWORD",
                 "ERROR_USER_NOT_FOUND" ->
-                    "❌ Email o contraseña incorrectos. Por favor, verifica tus datos."
+                    "Email o contraseña incorrectos. Por favor, verifica tus datos."
 
                 // Errores de registro
                 "ERROR_EMAIL_ALREADY_IN_USE" ->
-                    "📧 Este email ya está registrado. Intenta iniciar sesión."
+                    "Este email ya está registrado. Intenta iniciar sesión."
 
                 "ERROR_WEAK_PASSWORD" ->
-                    "🔒 La contraseña es muy débil. Usa al menos 6 caracteres con números."
+                    "La contraseña es muy débil. Usa al menos 6 caracteres con números."
 
                 // Errores de cuenta
                 "ERROR_USER_DISABLED" ->
-                    "⛔ Esta cuenta ha sido deshabilitada. Contacta con soporte."
+                    "Esta cuenta ha sido deshabilitada. Contacta con soporte."
 
                 // Errores de red
                 "ERROR_NETWORK_REQUEST_FAILED" ->
-                    "📡 Error de conexión. Verifica tu internet e inténtalo de nuevo."
+                    "Error de conexión. Verifica tu internet e inténtalo de nuevo."
 
                 else -> {
                     // Log para debugging
                     android.util.Log.e("AuthViewModel", "Error code: ${e.errorCode}, message: ${e.message}")
-                    "⚠️ ${e.message ?: "Algo salió mal. Inténtalo de nuevo."}"
+                    e.message ?: "Algo salió mal. Inténtalo de nuevo."
                 }
             }
         }
@@ -153,17 +158,17 @@ class AuthViewModel(
             errorMessage.contains("INVALID_LOGIN_CREDENTIALS", ignoreCase = true) ||
                     errorMessage.contains("invalid-credential", ignoreCase = true) ||
                     errorMessage.contains("invalid-email", ignoreCase = true) ->
-                "❌ Email o contraseña incorrectos. Por favor, verifica tus datos."
+                "Email o contraseña incorrectos. Por favor, verifica tus datos."
 
             errorMessage.contains("email-already-in-use", ignoreCase = true) ->
-                "📧 Este email ya está registrado. Intenta iniciar sesión."
+                "Este email ya está registrado. Intenta iniciar sesión."
 
             errorMessage.contains("network", ignoreCase = true) ->
-                "📡 Error de conexión. Verifica tu internet e inténtalo de nuevo."
+                "Error de conexión. Verifica tu internet e inténtalo de nuevo."
 
             else -> {
                 android.util.Log.e("AuthViewModel", "Unhandled error: ${e.javaClass.name}, message: $errorMessage")
-                "⚠️ $errorMessage"
+                errorMessage
             }
         }
     }

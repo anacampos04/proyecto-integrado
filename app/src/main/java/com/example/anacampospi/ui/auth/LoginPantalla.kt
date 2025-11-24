@@ -258,7 +258,10 @@ fun LoginPantalla(
                 state.error?.let { error ->
                     ModernMessageCard(
                         message = error,
-                        isError = true
+                        isError = true,
+                        autoDismiss = true,
+                        dismissDelayMillis = 5000,
+                        onDismiss = { vm.clearError() }
                     )
                 }
 

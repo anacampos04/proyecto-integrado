@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.rounded.HourglassEmpty
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
@@ -100,19 +101,21 @@ fun SwipeScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.padding(32.dp)
                     ) {
-                        Text(
-                            "⏳",
-                            style = MaterialTheme.typography.displayLarge
+                        Icon(
+                            imageVector = Icons.Rounded.HourglassEmpty,
+                            contentDescription = null,
+                            modifier = Modifier.size(80.dp),
+                            tint = TealPastel
                         )
                         Text(
-                            "Esperando a otros",
+                            "Esperando al grupo",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            "La ronda aún no está lista. Algunos amigos todavía tienen que configurar sus preferencias.",
+                            "La fiesta aún no está lista. \n Algunos amigos todavía tienen que configurar sus preferencias.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White.copy(alpha = 0.7f),
                             textAlign = TextAlign.Center
@@ -122,6 +125,7 @@ fun SwipeScreen(
                         if (uiState.usuariosPendientes.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Card(
+                                modifier = Modifier.fillMaxWidth(0.9f),
                                 colors = CardDefaults.cardColors(
                                     containerColor = SurfaceLight.copy(alpha = 0.6f)
                                 ),
@@ -179,12 +183,19 @@ fun SwipeScreen(
                                 containerColor = TealPastel,
                                 contentColor = Color.Black
                             ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth(0.8f)
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier.fillMaxWidth(0.9f),
+                            contentPadding = PaddingValues(vertical = 16.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = "Compartir")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Recordar por WhatsApp")
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Default.Share, contentDescription = "Compartir")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Recordar por WhatsApp")
+                            }
                         }
                     }
                 }

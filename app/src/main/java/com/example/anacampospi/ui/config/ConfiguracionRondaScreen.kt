@@ -574,66 +574,62 @@ fun ConfiguracionRondaScreen(
                             }
                         }
 
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        // Botón circular con icono
-                        FloatingActionButton(
-                            onClick = {
-                                if (!puedeIniciarRonda || uiState.creandoGrupo) return@FloatingActionButton
+                    // Botón rectangular normal
+                    Button(
+                        onClick = {
+                            if (!puedeIniciarRonda || uiState.creandoGrupo) return@Button
 
-                                scope.launch {
-                                    if (uiState.esInvitado && grupoId != null) {
-                                        // Modo invitado: configurar ronda existente
-                                        val result = viewModel.configurarRonda(
-                                            idGrupo = grupoId,
-                                            plataformas = plataformasSeleccionadas.toList(),
-                                            generos = generosSeleccionados.toList()
-                                        )
-                                        if (result.isSuccess) {
-                                            // Verificar si el grupo quedó ACTIVO (último en configurar)
-                                            val grupoActualizado = viewModel.verificarEstadoGrupo(grupoId)
-                                            val irASwipes = grupoActualizado?.estado == "ACTIVA"
-                                            onIniciarRonda(grupoId, irASwipes)
-                                        }
-                                    } else {
-                                        // Modo creador: crear nueva ronda (siempre va a home a esperar)
-                                        val nuevoGrupoId = viewModel.crearGrupo(
-                                            nombrePersonalizado = nombreRonda.trim().ifBlank { null },
-                                            amigosSeleccionados = amigosSeleccionados.toList(),
-                                            plataformas = plataformasSeleccionadas.toList(),
-                                            tipos = tiposSeleccionados,
-                                            generos = generosSeleccionados.toList()
-                                        )
-                                        nuevoGrupoId?.let { onIniciarRonda(it, false) }
+                            scope.launch {
+                                if (uiState.esInvitado && grupoId != null) {
+                                    // Modo invitado: configurar ronda existente
+                                    val result = viewModel.configurarRonda(
+                                        idGrupo = grupoId,
+                                        plataformas = plataformasSeleccionadas.toList(),
+                                        generos = generosSeleccionados.toList()
+                                    )
+                                    if (result.isSuccess) {
+                                        // Verificar si el grupo quedó ACTIVO (último en configurar)
+                                        val grupoActualizado = viewModel.verificarEstadoGrupo(grupoId)
+                                        val irASwipes = grupoActualizado?.estado == "ACTIVA"
+                                        onIniciarRonda(grupoId, irASwipes)
                                     }
+                                } else {
+                                    // Modo creador: crear nueva ronda (siempre va a home a esperar)
+                                    val nuevoGrupoId = viewModel.crearGrupo(
+                                        nombrePersonalizado = nombreRonda.trim().ifBlank { null },
+                                        amigosSeleccionados = amigosSeleccionados.toList(),
+                                        plataformas = plataformasSeleccionadas.toList(),
+                                        tipos = tiposSeleccionados,
+                                        generos = generosSeleccionados.toList()
+                                    )
+                                    nuevoGrupoId?.let { onIniciarRonda(it, false) }
                                 }
-                            },
-                            modifier = Modifier
-                                .size(80.dp)
-                                .shadow(
-                                    elevation = 12.dp,
-                                    shape = CircleShape,
-                                    ambientColor = GlowTeal,
-                                    spotColor = GlowTeal
-                                ),
-                            containerColor = if (puedeIniciarRonda && !uiState.creandoGrupo) TealPastel else Color.Gray,
-                            contentColor = Color.Black,
-                            shape = CircleShape
-                        ) {
-                            if (uiState.creandoGrupo) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(40.dp),
-                                    color = Color.Black
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = if (uiState.esInvitado) Icons.Default.Check else Icons.Default.PlayArrow,
-                                    contentDescription = if (uiState.esInvitado) "Guardar configuración" else "Iniciar ronda",
-                                    modifier = Modifier.size(40.dp)
-                                )
                             }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = puedeIniciarRonda && !uiState.creandoGrupo,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = TealPastel,
+                            contentColor = Color.Black,
+                            disabledContainerColor = Color.Gray,
+                            disabledContentColor = Color.Black.copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (uiState.creandoGrupo) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.Black,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = if (uiState.esInvitado) "Empezar" else "Invitar",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                     }

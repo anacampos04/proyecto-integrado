@@ -11,6 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -288,17 +291,27 @@ fun ModernOutlinedButton(
 
 /**
  * Card con efecto neumórfico para mensajes de error/éxito
+ * Ahora con icono y fondo más limpio
  */
 @Composable
 fun ModernMessageCard(
     message: String,
     isError: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    autoDismiss: Boolean = false,
+    dismissDelayMillis: Long = 5000,
+    onDismiss: (() -> Unit)? = null
 ) {
     // Animación de entrada
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         visible = true
+
+        // Auto-dismiss si está activado
+        if (autoDismiss && onDismiss != null) {
+            kotlinx.coroutines.delay(dismissDelayMillis)
+            onDismiss()
+        }
     }
 
     AnimatedVisibility(
@@ -309,42 +322,31 @@ fun ModernMessageCard(
         ) + fadeIn(),
         modifier = modifier
     ) {
-        Card(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    ambientColor = if (isError) CinemaRed.copy(alpha = 0.3f) else TealPastel.copy(alpha = 0.3f),
-                    spotColor = if (isError) CinemaRed.copy(alpha = 0.3f) else TealPastel.copy(alpha = 0.3f)
-                ),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isError)
-                    CinemaRed.copy(alpha = 0.15f)
-                else
-                    TealPastel.copy(alpha = 0.15f)
-            ),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                OverlayWhite05,
-                                Color.Transparent
-                            )
-                        )
-                    )
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = if (isError) CinemaRed else TealPastel,
+                    shape = RoundedCornerShape(12.dp)
                 )
-            }
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (isError) Icons.Rounded.Warning else Icons.Rounded.CheckCircle,
+                contentDescription = null,
+                tint = if (isError) CinemaRed else TealPastel,
+                modifier = Modifier.size(24.dp)
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -436,13 +438,14 @@ fun SwipeToDismissItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(1.dp) // Pequeño margen para evitar el filo rojo
                     .clip(RoundedCornerShape(cornerRadius))
                     .background(CinemaRed)
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Icon(
-                    Icons.Default.Delete,
+                    Icons.Rounded.Delete,
                     contentDescription = "Eliminar",
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)

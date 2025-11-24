@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import com.example.anacampospi.R
 import com.example.anacampospi.modelo.Grupo
 import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
+import com.example.anacampospi.util.AvatarUtil
 import com.example.anacampospi.viewModels.HomeViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -100,7 +102,7 @@ fun HomeScreen(
                             color = Color.White
                         )
                         Text(
-                            text = "¿Qué vamos a ver hoy?",
+                            text = "¿Qué vas a ver hoy?",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White.copy(alpha = 0.7f)
                         )
@@ -293,24 +295,24 @@ fun NuevaRondaCard(onClick: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        Icons.Default.Add,
+                        Icons.Rounded.Add,
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                 }
 
                 // Texto
                 Column {
                     Text(
-                        text = "Empezar nueva fiesta",
+                        text = "Crear nueva fiesta",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
                     Text(
-                        text = "Invita amigos y vota juntos",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Invita a amigos y votad juntos",
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.Black.copy(alpha = 0.7f)
                     )
                 }
@@ -497,23 +499,19 @@ fun GrupoItem(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                // Icono
+                // Icono con color corporativo plano
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(PopcornYellow, CinemaRed)
-                            )
-                        ),
+                        .background(TealPastel),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_popcorn),
+                        imageVector = AvatarUtil.getAvatarIcon(grupo.idGrupo),
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 

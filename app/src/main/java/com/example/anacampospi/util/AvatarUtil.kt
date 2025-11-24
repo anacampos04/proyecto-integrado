@@ -10,10 +10,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  */
 object AvatarUtil {
 
-    /**
-     * Lista de iconos disponibles para avatares.
-     * Se eligieron iconos divertidos, reconocibles y relacionados con cine/entretenimiento.
-     */
+    /** Lista de iconos disponibles para avatares.*/
     private val AVATAR_ICONS = listOf(
         Icons.Filled.Movie,           // Película
         Icons.Filled.Theaters,        // Teatro/Cine
@@ -21,25 +18,14 @@ object AvatarUtil {
         Icons.Filled.LiveTv,          // TV en vivo
         Icons.Filled.Star,            // Estrella
         Icons.Filled.Favorite,        // Corazón
-        Icons.Filled.LocalFireDepartment, // Fuego
         Icons.Filled.EmojiEmotions,   // Emoji sonriente
         Icons.Filled.SportsEsports,   // Juegos/Gaming
-        Icons.Filled.Casino,          // Casino/Dados
         Icons.Filled.Celebration,     // Celebración
-        Icons.Filled.Cake,            // Pastel
         Icons.Filled.LocalPizza,      // Pizza
-        Icons.Filled.Icecream,        // Helado
         Icons.Filled.Coffee,          // Café
-        Icons.Filled.Nightlife,       // Vida nocturna
-        Icons.Filled.MusicNote,       // Nota musical
-        Icons.Filled.Headphones,      // Auriculares
         Icons.Filled.PhotoCamera,     // Cámara de fotos
-        Icons.Filled.Palette,         // Paleta de colores
-        Icons.Filled.Brush,           // Pincel
-        Icons.Filled.ColorLens,       // Lente de color
-        Icons.Filled.Rocket,          // Cohete (si está disponible)
-        Icons.Filled.Flight,          // Avión
-        Icons.Filled.BeachAccess      // Sombrilla de playa
+        Icons.Filled.Weekend,         // Sofá/relax
+        Icons.Filled.LocalBar,        // Bar/bebida
     )
 
     /**
