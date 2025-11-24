@@ -8,11 +8,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.Tv
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -122,7 +127,7 @@ fun MatchesScreen(
                             modifier = Modifier.padding(32.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Warning,
+                                imageVector = Icons.Rounded.Warning,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
                                 tint = MaterialTheme.colorScheme.error
@@ -141,7 +146,7 @@ fun MatchesScreen(
                             Button(
                                 onClick = { viewModel.cargarMatches(grupoId) }
                             ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Icon(Icons.Rounded.Refresh, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("Reintentar")
                             }
@@ -150,7 +155,7 @@ fun MatchesScreen(
                 }
 
                 uiState.matchesVacios -> {
-                    // Sin matches
+                    // Sin matches en absoluto
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -161,7 +166,7 @@ fun MatchesScreen(
                             modifier = Modifier.padding(32.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Star,
+                                imageVector = Icons.Rounded.Favorite,
                                 contentDescription = null,
                                 modifier = Modifier.size(80.dp),
                                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
@@ -175,12 +180,73 @@ fun MatchesScreen(
                                 text = if (uiState.modoGrupoEspecifico) {
                                     "Empieza a votar contenido con tu grupo para ver tus coincidencias aquí"
                                 } else {
-                                    "Crea una ronda y vota contenido con tus amigos para encontrar coincidencias"
+                                    "Crea una ronda y vota contenido con tus amigos para hacer Match"
                                 },
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
+                        }
+                    }
+                }
+
+                uiState.filtrosVacios -> {
+                    // Hay matches pero los filtros no devuelven resultados
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        // Filtros de grupos (solo en modo general)
+                        if (!uiState.modoGrupoEspecifico && uiState.gruposDisponibles.isNotEmpty()) {
+                            FiltrosGrupoChips(
+                                grupos = uiState.gruposDisponibles,
+                                grupoSeleccionado = uiState.grupoSeleccionado,
+                                onGrupoSeleccionado = { viewModel.seleccionarGrupo(it) }
+                            )
+                        }
+
+                        // Pestañas de filtro de tipo
+                        FiltrosTipoPestanas(
+                            filtroActual = uiState.filtroTipo,
+                            onFiltroSeleccionado = { viewModel.cambiarFiltroTipo(it) }
+                        )
+
+                        // Mensaje de filtros vacíos
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Favorite,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(80.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = when {
+                                        uiState.filtroTipo == FiltroTipo.PELICULAS -> "No hay matches de películas"
+                                        uiState.filtroTipo == FiltroTipo.SERIES -> "No hay matches de series"
+                                        uiState.grupoSeleccionado != null -> {
+                                            val nombreGrupo = uiState.gruposDisponibles.find { it.id == uiState.grupoSeleccionado }?.nombre
+                                            "No hay matches en $nombreGrupo"
+                                        }
+                                        else -> "No hay matches con este filtro"
+                                    },
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                Text(
+                                    text = "Prueba con otro filtro para ver más matches",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
                 }

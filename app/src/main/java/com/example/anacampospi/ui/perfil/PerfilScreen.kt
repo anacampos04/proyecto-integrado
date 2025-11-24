@@ -29,10 +29,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.anacampospi.R
 import com.example.anacampospi.modelo.PlataformasCatalogo
 import com.example.anacampospi.viewModels.PerfilViewModel
 import com.example.anacampospi.ui.componentes.*
 import com.example.anacampospi.ui.theme.*
+import com.example.anacampospi.util.AvatarUtil
 
 /**
  * Pantalla de perfil del usuario
@@ -46,6 +48,7 @@ fun PerfilScreen(
     val uiState by viewModel.uiState.collectAsState()
     var mostrarSelectorPlataformas by remember { mutableStateOf(false) }
     var mostrarEditarNombre by remember { mutableStateOf(false) }
+    var mostrarCambiarContrasena by remember { mutableStateOf(false) }
 
     // Animación de entrada
     var visible by remember { mutableStateOf(false) }
@@ -96,7 +99,7 @@ fun PerfilScreen(
                             }
                         ) {
                             Icon(
-                                Icons.Default.ExitToApp,
+                                painter = painterResource(id = R.drawable.ic_logout),
                                 contentDescription = "Cerrar sesión",
                                 tint = CinemaRed
                             )
@@ -132,7 +135,7 @@ fun PerfilScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Avatar con icono
+                            // Avatar con icono aleatorio
                             Box(
                                 modifier = Modifier
                                     .size(100.dp)
@@ -153,11 +156,11 @@ fun PerfilScreen(
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = (uiState.usuario?.nombre?.firstOrNull()?.uppercase() ?: "U"),
-                                    style = MaterialTheme.typography.displayMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
+                                Icon(
+                                    imageVector = AvatarUtil.getAvatarIcon(uiState.usuario?.idUsuario ?: ""),
+                                    contentDescription = "Avatar",
+                                    modifier = Modifier.size(56.dp),
+                                    tint = Color.Black
                                 )
                             }
 
@@ -304,6 +307,80 @@ fun PerfilScreen(
                         }
                     }
 
+                    // Sección de seguridad
+                    AnimatedVisibility(
+                        visible = visible,
+                        enter = fadeIn(animationSpec = tween(600, delayMillis = 300)) +
+                                slideInVertically(initialOffsetY = { 50 })
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(16.dp),
+                                    ambientColor = TealPastel.copy(alpha = 0.2f)
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = SurfaceLight.copy(alpha = 0.6f)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text(
+                                    text = "Seguridad",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+
+                                // Botón de cambiar contraseña
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { mostrarCambiarContrasena = true }
+                                        .background(SurfaceDark.copy(alpha = 0.4f))
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Lock,
+                                            contentDescription = null,
+                                            tint = TealPastel
+                                        )
+                                        Column {
+                                            Text(
+                                                text = "Cambiar contraseña",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Medium,
+                                                color = Color.White
+                                            )
+                                            Text(
+                                                text = "Actualiza tu contraseña",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.4f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
@@ -332,6 +409,14 @@ fun PerfilScreen(
                 viewModel.actualizarNombre(nuevoNombre)
                 mostrarEditarNombre = false
             }
+        )
+    }
+
+    // Modal de cambio de contraseña
+    if (mostrarCambiarContrasena) {
+        CambiarContrasenaModal(
+            viewModel = viewModel,
+            onDismiss = { mostrarCambiarContrasena = false }
         )
     }
 }
@@ -512,6 +597,169 @@ fun EditarTextoModal(
                 label = titulo,
                 singleLine = true
             )
+        }
+    )
+}
+
+/**
+ * Modal para cambiar contraseña con validación
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CambiarContrasenaModal(
+    viewModel: PerfilViewModel = viewModel(),
+    onDismiss: () -> Unit
+) {
+    var contrasenaActual by remember { mutableStateOf("") }
+    var nuevaContrasena by remember { mutableStateOf("") }
+    var confirmarContrasena by remember { mutableStateOf("") }
+    var mostrarActual by remember { mutableStateOf(false) }
+    var mostrarNueva by remember { mutableStateOf(false) }
+    var mostrarConfirmar by remember { mutableStateOf(false) }
+    var errorMensaje by remember { mutableStateOf<String?>(null) }
+    var cambiando by remember { mutableStateOf(false) }
+    var mostrarExito by remember { mutableStateOf(false) }
+
+    // Cerrar automáticamente después del éxito
+    LaunchedEffect(mostrarExito) {
+        if (mostrarExito) {
+            kotlinx.coroutines.delay(1500)
+            onDismiss()
+        }
+    }
+
+    // Validación
+    val contrasenasCoinciden = nuevaContrasena == confirmarContrasena
+    val nuevaContrasenaValida = nuevaContrasena.length >= 6
+    val puedeGuardar = contrasenaActual.isNotBlank() &&
+                       nuevaContrasena.isNotBlank() &&
+                       confirmarContrasena.isNotBlank() &&
+                       contrasenasCoinciden &&
+                       nuevaContrasenaValida &&
+                       !cambiando
+
+    AlertDialog(
+        onDismissRequest = { if (!cambiando) onDismiss() },
+        containerColor = SurfaceLight,
+        shape = RoundedCornerShape(24.dp),
+        confirmButton = {
+            Button(
+                onClick = {
+                    cambiando = true
+                    errorMensaje = null
+                    viewModel.cambiarContrasena(
+                        contrasenaActual = contrasenaActual,
+                        nuevaContrasena = nuevaContrasena,
+                        onSuccess = {
+                            cambiando = false
+                            mostrarExito = true
+                        },
+                        onError = { error ->
+                            cambiando = false
+                            errorMensaje = error
+                        }
+                    )
+                },
+                enabled = puedeGuardar,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (mostrarExito) Color(0xFF4CAF50) else TealPastel,
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                when {
+                    cambiando -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.Black,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                    mostrarExito -> {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text("¡Cambiada!")
+                        }
+                    }
+                    else -> Text("Cambiar")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !cambiando,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.White.copy(alpha = 0.7f)
+                )
+            ) {
+                Text("Cancelar")
+            }
+        },
+        title = {
+            Text(
+                "Cambiar contraseña",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Contraseña actual
+                ModernPasswordField(
+                    value = contrasenaActual,
+                    onValueChange = { contrasenaActual = it },
+                    label = "Contraseña actual",
+                    mostrarPassword = mostrarActual,
+                    onToggleMostrar = { mostrarActual = !mostrarActual }
+                )
+
+                // Nueva contraseña
+                ModernPasswordField(
+                    value = nuevaContrasena,
+                    onValueChange = { nuevaContrasena = it },
+                    label = "Nueva contraseña",
+                    mostrarPassword = mostrarNueva,
+                    onToggleMostrar = { mostrarNueva = !mostrarNueva },
+                    isError = nuevaContrasena.isNotBlank() && !nuevaContrasenaValida,
+                    supportingText = if (nuevaContrasena.isNotBlank() && !nuevaContrasenaValida) {
+                        "Mínimo 6 caracteres"
+                    } else null
+                )
+
+                // Confirmar contraseña
+                ModernPasswordField(
+                    value = confirmarContrasena,
+                    onValueChange = { confirmarContrasena = it },
+                    label = "Confirmar contraseña",
+                    mostrarPassword = mostrarConfirmar,
+                    onToggleMostrar = { mostrarConfirmar = !mostrarConfirmar },
+                    isError = confirmarContrasena.isNotBlank() && !contrasenasCoinciden,
+                    supportingText = if (confirmarContrasena.isNotBlank() && !contrasenasCoinciden) {
+                        "Las contraseñas no coinciden"
+                    } else null
+                )
+
+                // Mensaje de error
+                errorMensaje?.let { mensaje ->
+                    Text(
+                        text = mensaje,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = CinemaRed,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
         }
     )
 }

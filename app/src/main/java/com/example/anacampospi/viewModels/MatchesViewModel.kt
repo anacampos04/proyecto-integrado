@@ -160,7 +160,8 @@ class MatchesViewModel : ViewModel() {
 
         _uiState.value = _uiState.value.copy(
             matches = matchesFiltrados,
-            matchesVacios = matchesFiltrados.isEmpty()
+            matchesVacios = todosLosMatches.isEmpty(), // No hay matches en absoluto
+            filtrosVacios = todosLosMatches.isNotEmpty() && matchesFiltrados.isEmpty() // Hay matches pero filtros devuelven vacío
         )
     }
 
@@ -188,7 +189,8 @@ data class MatchesUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val matches: List<MatchConGrupoConUsuarios> = emptyList(),
-    val matchesVacios: Boolean = false,
+    val matchesVacios: Boolean = false, // No hay matches en absoluto
+    val filtrosVacios: Boolean = false, // Hay matches pero los filtros no devuelven resultados
 
     // Modo de visualización
     val modoGrupoEspecifico: Boolean = false, // true = un solo grupo, false = todos los grupos

@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -125,6 +128,47 @@ fun ModernTextField(
             }
         }
     }
+}
+
+/**
+ * Campo de contraseña moderno con toggle para mostrar/ocultar
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModernPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    mostrarPassword: Boolean,
+    onToggleMostrar: () -> Unit,
+    isError: Boolean = false,
+    supportingText: String? = null,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    ModernTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label,
+        visualTransformation = if (mostrarPassword)
+            androidx.compose.ui.text.input.VisualTransformation.None
+        else
+            PasswordVisualTransformation(),
+        trailingIcon = {
+            IconButton(onClick = onToggleMostrar) {
+                Icon(
+                    imageVector = if (mostrarPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    contentDescription = if (mostrarPassword) "Ocultar contraseña" else "Mostrar contraseña",
+                    tint = TealPastel
+                )
+            }
+        },
+        isError = isError,
+        supportingText = supportingText,
+        singleLine = true,
+        enabled = enabled,
+        modifier = modifier
+    )
 }
 
 /**

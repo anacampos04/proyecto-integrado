@@ -20,7 +20,8 @@ class VotoRepository {
     suspend fun guardarVoto(
         idUsuario: String,
         idContenido: String,
-        valorVoto: ValorVoto
+        valorVoto: ValorVoto,
+        grupoId: String
     ): Result<Voto> {
         return try {
             val idVoto = UUID.randomUUID().toString()
@@ -30,6 +31,7 @@ class VotoRepository {
                 idUsuario = idUsuario,
                 idContenido = idContenido,
                 voto = valorVoto,
+                grupoId = grupoId,
                 creadoEn = null // ServerTimestamp se añadirá automáticamente
             )
 
@@ -62,13 +64,14 @@ class VotoRepository {
     }
 
     /**
-     * Verifica si un usuario ya votó un contenido específico
+     * Verifica si un usuario ya votó un contenido específico en un grupo
      */
-    suspend fun yaVoto(idUsuario: String, idContenido: String): Boolean {
+    suspend fun yaVoto(idUsuario: String, idContenido: String, grupoId: String): Boolean {
         return try {
             val snapshot = votosCollection
                 .whereEqualTo("idUsuario", idUsuario)
                 .whereEqualTo("idContenido", idContenido)
+                .whereEqualTo("grupoId", grupoId)
                 .limit(1)
                 .get()
                 .await()
@@ -136,11 +139,13 @@ class VotoRepository {
      * @param idUsuario ID del usuario actual
      * @param idContenido ID del contenido votado
      * @param todosMiembrosGrupo Lista de IDs de TODOS los miembros del grupo (incluyendo al usuario actual)
+     * @param grupoId ID del grupo donde se verifica el match
      */
     suspend fun verificarMatch(
         idUsuario: String,
         idContenido: String,
-        todosMiembrosGrupo: List<String>
+        todosMiembrosGrupo: List<String>,
+        grupoId: String
     ): Result<Boolean> {
         return try {
             // Si no hay grupo, no puede haber match
@@ -148,10 +153,11 @@ class VotoRepository {
                 return Result.success(false)
             }
 
-            // Buscar TODOS los votos de ME_GUSTA para este contenido
+            // Buscar TODOS los votos de ME_GUSTA para este contenido EN ESTE GRUPO
             val snapshot = votosCollection
                 .whereEqualTo("idContenido", idContenido)
                 .whereEqualTo("voto", ValorVoto.ME_GUSTA)
+                .whereEqualTo("grupoId", grupoId)
                 .get()
                 .await()
 

@@ -61,7 +61,7 @@ data class CurvedNavItem(
 }
 
 /**
- * Barra de navegación con curva hacia arriba (estilo Gemini mejorado)
+ * Barra de navegación con curva hacia arriba (mejorado)
  * Adaptada para usar CurvedNavItem (soporta ImageVector y Drawable)
  * Con animaciones fluidas de transición de iconos
  */
@@ -211,7 +211,7 @@ fun CurvedNavigationBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
-                // Animamos la escala y opacidad del icono inferior de forma muy suave
+                // Anima la escala y opacidad del icono inferior de forma muy suave
                 // Si está seleccionado -> Escala 0 (desaparece)
                 // Si NO está seleccionado -> Escala 1 (aparece)
                 val iconScale by animateFloatAsState(
@@ -265,7 +265,7 @@ fun CurvedNavigationBar(
  */
 object DefaultNavItems {
     val items = listOf(
-        CurvedNavItem("home", Icons.Rounded.Home, "Inicio"),
+        CurvedNavItem("home", R.drawable.ic_home, "Inicio"),
         CurvedNavItem("amigos", Icons.Rounded.People, "Amigos"),
         CurvedNavItem("swipe", R.drawable.ic_popcorn, "Swipes"),
         CurvedNavItem("matches", Icons.Rounded.Favorite, "Matches"),

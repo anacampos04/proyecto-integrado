@@ -37,4 +37,24 @@ class AuthRepository(
     fun currentUid(): String? = auth.currentUser?.uid
     //Objeto de usuario de FirebaseAuth (por si se necesita más campos).
     fun currentUser() = auth.currentUser
+
+    /**
+     * Reautentica al usuario con su contraseña actual.
+     * Necesario antes de operaciones sensibles como cambiar contraseña.
+     */
+    suspend fun reauthenticate(contrasenaActual: String) {
+        val user = auth.currentUser ?: throw Exception("No hay sesión activa")
+        val email = user.email ?: throw Exception("Usuario sin email")
+        val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, contrasenaActual)
+        user.reauthenticate(credential).await()
+    }
+
+    /**
+     * Cambia la contraseña del usuario actual.
+     * Requiere reautenticación previa.
+     */
+    suspend fun cambiarContrasena(nuevaContrasena: String) {
+        val user = auth.currentUser ?: throw Exception("No hay sesión activa")
+        user.updatePassword(nuevaContrasena).await()
+    }
 }

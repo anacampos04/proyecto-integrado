@@ -223,13 +223,14 @@ class SwipeViewModel : ViewModel() {
     }
 
     /**
-     * Filtra contenido que ya fue votado por el usuario
+     * Filtra contenido que ya fue votado por el usuario en este grupo
      */
     private suspend fun List<ContenidoLite>.filterVotados(): List<ContenidoLite> {
         val uid = authRepository.currentUid() ?: return this
+        val grupoId = currentGrupoId ?: return this // Sin grupo, no filtramos
 
         return this.filter { contenido ->
-            !votoRepository.yaVoto(uid, contenido.idContenido)
+            !votoRepository.yaVoto(uid, contenido.idContenido, grupoId)
         }
     }
 
@@ -257,11 +258,13 @@ class SwipeViewModel : ViewModel() {
     private fun guardarVoto(contenido: ContenidoLite, valorVoto: ValorVoto) {
         viewModelScope.launch {
             val uid = authRepository.currentUid() ?: return@launch
+            val grupoId = currentGrupoId ?: return@launch // Sin grupo, no guardamos voto
 
             val result = votoRepository.guardarVoto(
                 idUsuario = uid,
                 idContenido = contenido.idContenido,
-                valorVoto = valorVoto
+                valorVoto = valorVoto,
+                grupoId = grupoId
             )
 
             result.onSuccess {
@@ -307,7 +310,7 @@ class SwipeViewModel : ViewModel() {
 
             android.util.Log.d("SwipeViewModel", "Verificando match con miembros del grupo: $miembrosGrupo")
 
-            val result = votoRepository.verificarMatch(uid, contenido.idContenido, miembrosGrupo)
+            val result = votoRepository.verificarMatch(uid, contenido.idContenido, miembrosGrupo, currentGrupoId!!)
 
             result.onSuccess { hayMatch ->
                 if (hayMatch) {

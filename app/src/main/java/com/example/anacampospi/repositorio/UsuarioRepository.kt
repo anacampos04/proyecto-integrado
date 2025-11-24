@@ -37,11 +37,9 @@ class UsuarioRepository(
                 creadoEn = null // Firestore lo establecerá con @ServerTimestamp
             )
             doc.set(usuario).await()
-        } else { //si ya existe refrescar los datos que vengan del proveedor si hay
-            val updates = mutableMapOf<String, Any>()
-            if (!nombre.isNullOrBlank()) updates["nombre"] = nombre
-            if (updates.isNotEmpty()) doc.update(updates).await()
         }
+        // Si el documento ya existe, no actualizamos el nombre.
+        // El usuario puede haber editado su nombre en Firestore y no queremos sobrescribirlo.
     }
 
     /**

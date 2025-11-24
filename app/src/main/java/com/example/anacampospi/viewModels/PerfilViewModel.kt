@@ -127,6 +127,37 @@ class PerfilViewModel(
     }
 
     /**
+     * Cambia la contraseña del usuario
+     */
+    fun cambiarContrasena(
+        contrasenaActual: String,
+        nuevaContrasena: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                // Primero reautenticar con la contraseña actual
+                authRepository.reauthenticate(contrasenaActual)
+                // Luego cambiar a la nueva contraseña
+                authRepository.cambiarContrasena(nuevaContrasena)
+                onSuccess()
+            } catch (e: Exception) {
+                val mensaje = when {
+                    e.message?.contains("WRONG_PASSWORD") == true ||
+                    e.message?.contains("invalid-credential") == true ->
+                        "Contraseña actual incorrecta"
+                    e.message?.contains("WEAK_PASSWORD") == true ||
+                    e.message?.contains("weak-password") == true ->
+                        "La nueva contraseña debe tener al menos 6 caracteres"
+                    else -> e.message ?: "Error al cambiar contraseña"
+                }
+                onError(mensaje)
+            }
+        }
+    }
+
+    /**
      * Cierra la sesión del usuario
      */
     fun cerrarSesion() {

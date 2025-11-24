@@ -9,5 +9,6 @@ data class Voto(
     val idUsuario: String = "",
     val idContenido: String = "", // "movie:123" | "tv:456"
     val voto: ValorVoto = ValorVoto.NO_ME_GUSTA,
+    val grupoId: String = "", // ID del grupo donde se realizó el voto
     @ServerTimestamp val creadoEn: Timestamp? = null
 )
