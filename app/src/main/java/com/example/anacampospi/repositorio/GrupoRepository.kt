@@ -17,6 +17,8 @@ class GrupoRepository(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
     private val colGrupos = db.collection("grupos")
+    private val notificacionRepo = NotificacionRepository(db)
+    private val usuarioRepo = UsuarioRepository(db)
 
     /**
      * Crea un nuevo grupo/ronda con configuración del creador.
@@ -86,6 +88,26 @@ class GrupoRepository(
             // Actualizar el documento con su propio ID
             docRef.update("idGrupo", docRef.id).await()
 
+            // Enviar notificaciones a los miembros invitados (excluyendo al creador)
+            try {
+                val miembrosInvitados = miembrosFinales.filter { it != creadoPor }
+                if (miembrosInvitados.isNotEmpty()) {
+                    // Obtener nombre del creador
+                    val usuarioCreador = usuarioRepo.getUsuario(creadoPor).getOrNull()
+                    val nombreCreador = usuarioCreador?.nombre?.ifBlank { "Un amigo" } ?: "Un amigo"
+
+                    notificacionRepo.enviarNotificacionInvitacionRonda(
+                        uidsDestino = miembrosInvitados,
+                        nombreGrupo = nombre,
+                        grupoId = docRef.id,
+                        nombreCreador = nombreCreador
+                    )
+                }
+            } catch (e: Exception) {
+                // No fallar la creación del grupo si falla el envío de notificaciones
+                android.util.Log.e("GrupoRepository", "Error al enviar notificaciones de invitación", e)
+            }
+
             Result.success(docRef.id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -141,7 +163,8 @@ class GrupoRepository(
 
             if (todosConfigurados) {
                 // Calcular unión de filtros y activar ronda
-                activarRonda(idGrupo, nuevoMapaConfiguraciones)
+                // Pasar el UID del usuario que acaba de configurar para excluirlo de la notificación
+                activarRonda(idGrupo, nuevoMapaConfiguraciones, uid)
             }
 
             Result.success(Unit)
@@ -153,10 +176,12 @@ class GrupoRepository(
     /**
      * Activa la ronda cuando todos han configurado.
      * Calcula la unión de plataformas y géneros.
+     * @param uidUltimoEnConfigurar UID del último usuario en configurar (no se le enviará notificación)
      */
     private suspend fun activarRonda(
         idGrupo: String,
-        configuraciones: Map<String, ConfiguracionUsuario>
+        configuraciones: Map<String, ConfiguracionUsuario>,
+        uidUltimoEnConfigurar: String? = null
     ) {
         try {
             val grupo = obtenerGrupo(idGrupo).getOrNull() ?: return
@@ -184,6 +209,18 @@ class GrupoRepository(
                     "filtrosActualizadosEn" to FieldValue.serverTimestamp()
                 )
             ).await()
+
+            // Enviar notificaciones a todos los miembros EXCEPTO al que acaba de configurar
+            try {
+                notificacionRepo.enviarNotificacionRondaActivada(
+                    uidsDestino = grupo.miembros,
+                    nombreGrupo = grupo.nombre,
+                    grupoId = idGrupo,
+                    uidExcluir = uidUltimoEnConfigurar
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("GrupoRepository", "Error al enviar notificaciones de activación", e)
+            }
         } catch (e: Exception) {
             // Log error pero no fallar
             e.printStackTrace()
@@ -304,16 +341,16 @@ class GrupoRepository(
      */
     private fun generarNombreGrupo(numeroMiembros: Int): String {
         val nombres = listOf(
-            "Noche de Pelis",
-            "Cinéfilos Unidos",
-            "Adictos a las Series",
+            "Spoiler: noche de pelis",
+            "Mantita y pelis",
+            "Solo un capítulo más",
             "Club de Cine",
-            "Maratón de Películas",
+            "Maratón de palomitas",
             "Viernes de Series",
-            "Palomitas y Diversión",
+            "Terapia de grupo",
             "Sesión Doble",
-            "Amantes del Cine",
-            "Tribu del Sofá"
+            "Desmadre pero no mucho",
+            "Resacón en la casa"
         )
         return nombres.random()
     }

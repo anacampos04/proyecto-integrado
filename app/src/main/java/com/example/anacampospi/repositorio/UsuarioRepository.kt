@@ -133,4 +133,16 @@ class UsuarioRepository(
             Result.failure(e)
         }
     }
+
+    /**
+     * Actualiza el token FCM del usuario para notificaciones push
+     */
+    suspend fun actualizarTokenFCM(uid: String, token: String): Result<Unit> {
+        return try {
+            col.document(uid).update("fcmToken", token).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

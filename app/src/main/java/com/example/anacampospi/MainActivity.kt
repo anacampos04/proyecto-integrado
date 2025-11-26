@@ -1,16 +1,26 @@
 package com.example.anacampospi
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -33,19 +43,41 @@ import com.example.anacampospi.ui.swipe.SwipeScreen
 import com.example.anacampospi.ui.theme.PopCornTribuTheme
 import com.example.anacampospi.viewModels.AmigosViewModel
 import com.example.anacampospi.viewModels.AuthViewModel
+import com.example.anacampospi.ui.tutorial.TutorialViewModel
+import com.example.anacampospi.ui.tutorial.TutorialOverlay
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+    // MutableState para notificar cambios en el Intent
+    private val _intentState = mutableStateOf<Intent?>(null)
+    val intentState: State<Intent?> = _intentState
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Instalar splash screen ANTES de super.onCreate()
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
+        // Procesar intent inicial
+        _intentState.value = intent
+        // Firebase pasa los datos del payload "data" directamente como extras
+        val tipoNotificacion = intent.getStringExtra("tipo")
+        android.util.Log.d("MainActivity", "onCreate - Tipo de notificación: $tipoNotificacion")
+
         setContent {
             PopCornTribuTheme {
                 AppNavigation()
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Actualizar el estado para que Compose lo detecte
+        _intentState.value = intent
+        val tipoNotificacion = intent.getStringExtra("tipo")
+        android.util.Log.d("MainActivity", "onNewIntent - Tipo de notificación: $tipoNotificacion")
     }
 }
 
@@ -133,6 +165,108 @@ fun MainScreenWithNavigation(
     // ViewModel para obtener el contador de solicitudes pendientes
     val amigosViewModel: AmigosViewModel = viewModel()
     val amigosState by amigosViewModel.uiState.collectAsState()
+
+    // ViewModel del tutorial
+    val tutorialViewModel: TutorialViewModel = viewModel()
+    val tutorialState by tutorialViewModel.uiState.collectAsState()
+
+    // Solicitar permiso de notificaciones en Android 13+ (API 33+)
+    val context = LocalContext.current
+
+    // Observar cambios en el Intent desde MainActivity
+    val activity = context as? MainActivity
+    val currentIntent by (activity?.intentState ?: remember { mutableStateOf<Intent?>(null) })
+
+    // Extraer el tipo de notificación del Intent actual
+    // Firebase pasa los datos del campo "data" directamente como extras
+    val notificacionTipo = currentIntent?.getStringExtra("tipo")
+
+    // Log para debugging
+    LaunchedEffect(currentIntent) {
+        android.util.Log.d("MainActivity", "Intent cambió - tipo: $notificacionTipo")
+    }
+
+    // Launcher para solicitar el permiso
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            android.util.Log.d("MainActivity", "Permiso de notificaciones concedido")
+        } else {
+            android.util.Log.w("MainActivity", "Permiso de notificaciones denegado")
+        }
+    }
+
+    // Verificar si debe mostrarse el tutorial
+    LaunchedEffect(Unit) {
+        if (tutorialViewModel.deberMostrarTutorial(context)) {
+            android.util.Log.d("MainActivity", "Primera vez - mostrando tutorial")
+            tutorialViewModel.mostrarTutorial()
+        }
+    }
+
+    // Solicitar permiso al entrar a la pantalla principal (solo una vez)
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasPermission) {
+                android.util.Log.d("MainActivity", "Solicitando permiso de notificaciones")
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                android.util.Log.d("MainActivity", "Permiso de notificaciones ya concedido")
+            }
+        }
+    }
+
+    // Navegar basado en el tipo de notificación
+    LaunchedEffect(notificacionTipo) {
+        if (notificacionTipo != null) {
+            android.util.Log.d("MainActivity", "Detectada notificación tipo: $notificacionTipo")
+
+            // Pequeño delay para asegurar que el NavHost esté listo
+            kotlinx.coroutines.delay(100)
+
+            android.util.Log.d("MainActivity", "Navegando a pantalla correspondiente...")
+            when (notificacionTipo) {
+                "peticion_amistad" -> {
+                    android.util.Log.d("MainActivity", "Navegando a amigos")
+                    navController.navigate("amigos") {
+                        popUpTo("home") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+                "invitacion_ronda" -> {
+                    android.util.Log.d("MainActivity", "Navegando a home (invitación)")
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+                "ronda_activada" -> {
+                    android.util.Log.d("MainActivity", "Navegando a home (activada)")
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+                "nuevo_match" -> {
+                    android.util.Log.d("MainActivity", "Navegando a matches")
+                    navController.navigate("matches") {
+                        popUpTo("home") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            }
+
+            android.util.Log.d("MainActivity", "Navegación completada, limpiando extra")
+            // Limpiar el extra para evitar navegaciones repetidas
+            currentIntent?.removeExtra("tipo")
+        }
+    }
 
     // Mapear rutas internas a rutas de la navbar
     val mappedRoute = when {
@@ -335,6 +469,12 @@ fun MainScreenWithNavigation(
                     )
                 }
             }
+
+            // Overlay del tutorial que se muestra sobre todo el contenido
+            TutorialOverlay(
+                viewModel = tutorialViewModel,
+                uiState = tutorialState
+            )
         }
     }
 }

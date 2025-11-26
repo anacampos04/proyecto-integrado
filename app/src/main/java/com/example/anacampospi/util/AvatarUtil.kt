@@ -2,6 +2,20 @@ package com.example.anacampospi.util
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Celebration
+import androidx.compose.material.icons.rounded.Coffee
+import androidx.compose.material.icons.rounded.EmojiEmotions
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.LiveTv
+import androidx.compose.material.icons.rounded.LocalBar
+import androidx.compose.material.icons.rounded.LocalPizza
+import androidx.compose.material.icons.rounded.Movie
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.SportsEsports
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Theaters
+import androidx.compose.material.icons.rounded.Videocam
+import androidx.compose.material.icons.rounded.Weekend
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
@@ -12,20 +26,20 @@ object AvatarUtil {
 
     /** Lista de iconos disponibles para avatares.*/
     private val AVATAR_ICONS = listOf(
-        Icons.Filled.Movie,           // Película
-        Icons.Filled.Theaters,        // Teatro/Cine
-        Icons.Filled.Videocam,        // Cámara de video
-        Icons.Filled.LiveTv,          // TV en vivo
-        Icons.Filled.Star,            // Estrella
-        Icons.Filled.Favorite,        // Corazón
-        Icons.Filled.EmojiEmotions,   // Emoji sonriente
-        Icons.Filled.SportsEsports,   // Juegos/Gaming
-        Icons.Filled.Celebration,     // Celebración
-        Icons.Filled.LocalPizza,      // Pizza
-        Icons.Filled.Coffee,          // Café
-        Icons.Filled.PhotoCamera,     // Cámara de fotos
-        Icons.Filled.Weekend,         // Sofá/relax
-        Icons.Filled.LocalBar,        // Bar/bebida
+        Icons.Rounded.Movie,           // Película
+        Icons.Rounded.Theaters,        // Teatro/Cine
+        Icons.Rounded.Videocam,        // Cámara de video
+        Icons.Rounded.LiveTv,          // TV en vivo
+        Icons.Rounded.Star,            // Estrella
+        Icons.Rounded.Favorite,        // Corazón
+        Icons.Rounded.EmojiEmotions,   // Emoji sonriente
+        Icons.Rounded.SportsEsports,   // Juegos/Gaming
+        Icons.Rounded.Celebration,     // Celebración
+        Icons.Rounded.LocalPizza,      // Pizza
+        Icons.Rounded.Coffee,          // Café
+        Icons.Rounded.PhotoCamera,     // Cámara de fotos
+        Icons.Rounded.Weekend,         // Sofá/relax
+        Icons.Rounded.LocalBar,        // Bar/bebida
     )
 
     /**

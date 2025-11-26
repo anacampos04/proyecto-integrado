@@ -28,11 +28,18 @@ class AmigosViewModel(
     private val _uiState = MutableStateFlow(AmigosUiState())
     val uiState: StateFlow<AmigosUiState> = _uiState.asStateFlow()
 
+    private var solicitudesListener: com.google.firebase.firestore.ListenerRegistration? = null
+
     init {
         cargarDatosUsuario()
         cargarAmigos()
-        cargarSolicitudesPendientes()
+        escucharSolicitudesPendientes() // Cambiado a listener en tiempo real
         cargarSolicitudesEnviadas()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        solicitudesListener?.remove()
     }
 
     /**
@@ -159,20 +166,18 @@ class AmigosViewModel(
     }
 
     /**
-     * Carga las solicitudes de amistad pendientes (recibidas).
+     * Escucha las solicitudes de amistad pendientes en tiempo real.
      */
-    private fun cargarSolicitudesPendientes() {
+    private fun escucharSolicitudesPendientes() {
         val uid = auth.currentUser?.uid ?: return
 
+        android.util.Log.d("AmigosViewModel", "Configurando listener de solicitudes para: $uid")
+
         viewModelScope.launch {
-            val result = solicitudRepository.obtenerSolicitudesPendientes(uid)
-            result.onSuccess { solicitudes ->
+            solicitudesListener = solicitudRepository.escucharSolicitudesPendientes(uid) { solicitudes ->
+                android.util.Log.d("AmigosViewModel", "Solicitudes actualizadas: ${solicitudes.size}")
                 _uiState.value = _uiState.value.copy(
                     solicitudesPendientes = solicitudes
-                )
-            }.onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    errorAmigos = "Error al cargar solicitudes: ${error.message}"
                 )
             }
         }
@@ -210,7 +215,7 @@ class AmigosViewModel(
                 _uiState.value = _uiState.value.copy(
                     mensajeExito = "¡Solicitud aceptada!"
                 )
-                cargarSolicitudesPendientes()
+                // Las solicitudes se actualizarán automáticamente por el listener
                 cargarAmigos()
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
@@ -229,7 +234,7 @@ class AmigosViewModel(
         viewModelScope.launch {
             val result = solicitudRepository.rechazarSolicitud(uid, solicitudId)
             result.onSuccess {
-                cargarSolicitudesPendientes()
+                // Las solicitudes se actualizarán automáticamente por el listener
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     errorAmigos = error.message

@@ -6,6 +6,7 @@ import com.example.anacampospi.repositorio.AuthRepository
 import com.example.anacampospi.repositorio.UsuarioRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -75,6 +76,16 @@ class AuthViewModel(
             correo = u.email,
             nombre = nombreOverride ?: u.displayName
         )
+
+        // Obtener y guardar token FCM para notificaciones push
+        try {
+            val token = FirebaseMessaging.getInstance().token.await()
+            android.util.Log.d("Auth", "FCM Token obtenido: $token")
+            usuarioRepo.actualizarTokenFCM(u.uid, token)
+        } catch (e: Exception) {
+            android.util.Log.e("Auth", "Error al obtener/guardar token FCM", e)
+            // No lanzar excepción, el login sigue siendo exitoso aunque falle el token
+        }
     }
 
     /**

@@ -132,7 +132,7 @@ fun ConfiguracionRondaScreen(
                 ) {
                     Column {
                         Text(
-                            text = if (uiState.esInvitado) "Configurar mis preferencias" else "Preparativos de la fiesta",
+                            text = "Preparativos de la fiesta",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -171,7 +171,7 @@ fun ConfiguracionRondaScreen(
                                 color = Color.White
                             )
                             Text(
-                                text = "Elige un nombre único para esta sesión",
+                                text = "Ponle un nombre épico al grupo",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White.copy(alpha = 0.7f)
                             )
@@ -180,7 +180,7 @@ fun ConfiguracionRondaScreen(
                                 value = nombreRonda,
                                 onValueChange = { if (it.length <= 30) nombreRonda = it },
                                 modifier = Modifier.fillMaxWidth(),
-                                placeholder = { Text("Noches de sofá, Pijama party...") },
+                                placeholder = { Text("Resacón en la casa, Pijama party...") },
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = TealPastel,

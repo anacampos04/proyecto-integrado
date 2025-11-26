@@ -16,6 +16,7 @@ data class Usuario(
     val plataformas: List<String> = emptyList(), // plataformas que tiene el usuario
     val region: String = "ES",
     val amigos: List<String> = emptyList(), // cache de uids de amigos
+    val fcmToken: String = "", // Token de Firebase Cloud Messaging para notificaciones push
     @ServerTimestamp val creadoEn:Timestamp? =null
     //@ServertTimestamp funciona cuando el valor enviado es null: Firestore pondrá la hora del servidor automáticamente en el write
 )
