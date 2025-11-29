@@ -173,19 +173,6 @@ fun TutorialOverlay(
                                 }
                             }
                         }
-
-                        /*// Botón "Saltar tutorial" en pasos iniciales
-                        if (uiState.pasoIndex < 1) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            TextButton(
-                                onClick = { viewModel.saltarTutorial(context) }
-                            ) {
-                                Text(
-                                    "Saltar tutorial",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }*/
                     }
                 }
             }
