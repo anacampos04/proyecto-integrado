@@ -25,16 +25,6 @@ object CodigoInvitacionUtil {
     }
 
     /**
-     * Valida el formato del código de invitación
-     * @return true si el formato es correcto (PCT-XXXX)
-     */
-    fun esValido(codigo: String): Boolean {
-        if (codigo.isBlank()) return false
-        val regex = Regex("^$PREFIX-[${CHARS}]{$CODE_LENGTH}$")
-        return regex.matches(codigo.uppercase())
-    }
-
-    /**
      * Normaliza el código (uppercase, sin espacios)
      */
     fun normalizar(codigo: String): String {

@@ -8,8 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +17,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -40,7 +37,6 @@ import com.example.anacampospi.data.tmdb.models.TmdbGenres
 import com.example.anacampospi.modelo.PlataformasCatalogo
 import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.modelo.enums.TipoContenido
-import com.example.anacampospi.ui.componentes.*
 import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.ConfiguracionRondaViewModel
 import kotlinx.coroutines.launch
@@ -51,7 +47,6 @@ import kotlinx.coroutines.launch
  * - Creador (grupoId = null): configurar nueva ronda con amigos, tipos, plataformas y géneros
  * - Invitado (grupoId != null): configurar solo plataformas y géneros en ronda existente
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ConfiguracionRondaScreen(
     grupoId: String? = null, // Si es null, modo creador. Si no, modo invitado.
@@ -680,12 +675,6 @@ private fun ModernPlataformaItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "scale"
-    )
-
     Box(
         modifier = modifier
             .aspectRatio(1f)
@@ -795,25 +784,6 @@ private fun ModernGeneroChip(
             }
         }
     }
-}
-
-// Mantener los componentes antiguos por compatibilidad pero delegando a los nuevos
-@Composable
-private fun PlataformaItem(
-    plataforma: com.example.anacampospi.modelo.PlataformaStreaming,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    ModernPlataformaItem(plataforma, isSelected, onClick)
-}
-
-@Composable
-private fun GeneroChip(
-    nombre: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    ModernGeneroChip(nombre, isSelected, onClick)
 }
 
 /**

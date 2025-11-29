@@ -30,11 +30,4 @@ class TutorialPreferences(context: Context) {
     fun marcarTutorialCompletado() {
         prefs.edit().putBoolean(KEY_TUTORIAL_COMPLETADO, true).apply()
     }
-
-    /**
-     * Reinicia el tutorial (útil para testing)
-     */
-    fun resetTutorial() {
-        prefs.edit().putBoolean(KEY_TUTORIAL_COMPLETADO, false).apply()
-    }
 }

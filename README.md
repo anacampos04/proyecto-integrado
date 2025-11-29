@@ -115,8 +115,8 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **🎯 Objetivo:** Entrega final  
 
 **Tareas:**
-- [ ] Pruebas de funcionamiento  
-- [ ] Corrección de errores  
+- [x] Pruebas de funcionamiento  
+- [x] Corrección de errores  
 - [ ] Documentación v5  
 
 **Entrega final:**  

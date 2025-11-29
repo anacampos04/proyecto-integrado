@@ -2,7 +2,6 @@ package com.example.anacampospi.ui.tutorial
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Celebration
-import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.MovieFilter
 import androidx.compose.material.icons.rounded.Person

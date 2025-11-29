@@ -30,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.anacampospi.R
 import com.example.anacampospi.modelo.PlataformasCatalogo
 import com.example.anacampospi.viewModels.PerfilViewModel
 import com.example.anacampospi.ui.componentes.*
@@ -40,7 +39,6 @@ import com.example.anacampospi.util.AvatarUtil
 /**
  * Pantalla de perfil del usuario
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(
     onLogout: () -> Unit,

@@ -1,7 +1,6 @@
 package com.example.anacampospi.util
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Celebration
 import androidx.compose.material.icons.rounded.Coffee
 import androidx.compose.material.icons.rounded.EmojiEmotions
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.rounded.Theaters
 import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material.icons.rounded.Weekend
 import androidx.compose.ui.graphics.vector.ImageVector
+import kotlin.math.abs
 
 /**
  * Utilidad para gestionar avatares aleatorios basados en iconos de Material Design.
@@ -51,13 +51,7 @@ object AvatarUtil {
      */
     fun getAvatarIcon(userId: String): ImageVector {
         val hash = userId.hashCode()
-        val index = Math.abs(hash % AVATAR_ICONS.size)
+        val index = abs(hash % AVATAR_ICONS.size)
         return AVATAR_ICONS[index]
     }
-
-    /**
-     * Obtiene todos los iconos disponibles para mostrar en un selector.
-     * @return Lista completa de iconos de avatar
-     */
-    fun getAllIcons(): List<ImageVector> = AVATAR_ICONS
 }

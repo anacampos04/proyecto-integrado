@@ -33,7 +33,7 @@ import com.example.anacampospi.ui.theme.*
  * Campo de texto más moderno con efecto neumórfico sutil y animaciones.
  * Estilo con bordes redondeados, sombras difuminadas, transiciones suaves.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun ModernTextField(
     value: String,
@@ -134,7 +134,7 @@ fun ModernTextField(
 /**
  * Campo de contraseña moderno con toggle para mostrar/ocultar
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun ModernPasswordField(
     value: String,
@@ -185,13 +185,6 @@ fun ModernButton(
     loading: Boolean = false,
     isPrimary: Boolean = true
 ) {
-    // Animación de escala al presionar
-    var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "scale"
-    )
 
     Button(
         onClick = onClick,
@@ -224,65 +217,6 @@ fun ModernButton(
                 text = text,
                 style = MaterialTheme.typography.titleMedium
             )
-        }
-    }
-}
-
-/**
- * Botón outlined moderno (para Google, etc)
- */
-@Composable
-fun ModernOutlinedButton(
-    onClick: () -> Unit,
-    text: String,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    icon: ImageVector? = null
-) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = modifier
-            .height(56.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = Color.White,
-            disabledContainerColor = Color.Transparent,
-            disabledContentColor = Color.White.copy(alpha = 0.4f)
-        ),
-        border = ButtonDefaults.outlinedButtonBorder.copy(
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    TealPastel.copy(alpha = 0.5f),
-                    TealPastel.copy(alpha = 0.3f)
-                )
-            ),
-            width = 1.5.dp
-        ),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-        ) {
-            icon?.let {
-                Icon(
-                    imageVector = it,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            if (icon != null) {
-                Spacer(modifier = Modifier.size(20.dp))
-            }
         }
     }
 }
@@ -358,7 +292,7 @@ fun ModernDivider(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         HorizontalDivider(
@@ -410,7 +344,7 @@ fun ModernTextButton(
  * @param cornerRadius Radio de las esquinas (por defecto 12.dp)
  * @param content Contenido que se mostrará y se puede deslizar
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun SwipeToDismissItem(
     onDelete: () -> Unit,

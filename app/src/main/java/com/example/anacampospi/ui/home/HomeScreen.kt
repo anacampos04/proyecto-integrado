@@ -3,18 +3,14 @@ package com.example.anacampospi.ui.home
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,14 +21,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.anacampospi.R
 import com.example.anacampospi.modelo.Grupo
 import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
@@ -44,7 +38,6 @@ import java.util.*
 /**
  * Pantalla principal (Home) que muestra las rondas activas del usuario
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNuevaRonda: () -> Unit,
@@ -235,14 +228,14 @@ fun HomeScreen(
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
             ) {
-                androidx.compose.material3.Surface(
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .shadow(
                             elevation = 8.dp,
                             shape = RoundedCornerShape(16.dp)
                         ),
-                    color = androidx.compose.ui.graphics.Color(0xFF2C2C2E),
+                    color = Color(0xFF2C2C2E),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Row(
@@ -251,15 +244,15 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Filled.Info,
+                            imageVector = Icons.Filled.Info,
                             contentDescription = null,
-                            tint = androidx.compose.ui.graphics.Color(0xFFFFCC00),
+                            tint = Color(0xFFFFCC00),
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
                             text = error,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = androidx.compose.ui.graphics.Color.White,
+                            color = Color.White,
                             modifier = Modifier.weight(1f)
                         )
                     }

@@ -513,7 +513,7 @@ private fun CardBack(
                         ) {
                             Surface(
                                 color = Color.Red,
-                                shape = androidx.compose.foundation.shape.CircleShape
+                                shape = CircleShape
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.PlayArrow,

@@ -28,17 +28,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.AmigosViewModel
-import kotlinx.coroutines.launch
 
 /**
  * Pantalla para gestionar amigos: mostrar código propio, buscar usuarios y ver amigos.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun AmigosScreen(
     viewModel: AmigosViewModel
@@ -180,8 +178,8 @@ fun AmigosScreen(
                     buscando = uiState.buscando,
                     usuarioEncontrado = uiState.usuarioEncontrado,
                     yaSonAmigos = uiState.yaSonAmigos,
-                    onAñadirAmigo = { viewModel.añadirAmigo() },
-                    añadiendoAmigo = uiState.añadiendoAmigo,
+                    onAnhadirAmigo = { viewModel.añadirAmigo() },
+                    anhadiendoAmigo = uiState.añadiendoAmigo,
                     onLimpiar = {
                         codigoBusqueda = "PCT-"
                         viewModel.limpiarBusqueda()
@@ -303,7 +301,6 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
 
             // Código destacado (clickeable para copiar)
             val context = LocalContext.current
-            val scope = rememberCoroutineScope()
             var mostrarCopiado by remember { mutableStateOf(false) }
 
             LaunchedEffect(mostrarCopiado) {
@@ -319,7 +316,9 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
                     .clickable {
                         if (codigo.isNotBlank()) {
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("Código de invitación", codigo)
+                            // Copiar solo los 4 dígitos sin el prefijo PTC-
+                            val soloDigitos = codigo.removePrefix("PTC-")
+                            val clip = ClipData.newPlainText("Código de invitación", soloDigitos)
                             clipboard.setPrimaryClip(clip)
                             mostrarCopiado = true
                         }
@@ -386,8 +385,8 @@ fun BuscarUsuarioCard(
     buscando: Boolean,
     usuarioEncontrado: Usuario?,
     yaSonAmigos: Boolean,
-    onAñadirAmigo: () -> Unit,
-    añadiendoAmigo: Boolean,
+    onAnhadirAmigo: () -> Unit,
+    anhadiendoAmigo: Boolean,
     onLimpiar: () -> Unit
 ) {
     Card(
@@ -502,8 +501,8 @@ fun BuscarUsuarioCard(
                 UsuarioEncontradoItem(
                     usuario = usuario,
                     yaSonAmigos = yaSonAmigos,
-                    onAñadirAmigo = onAñadirAmigo,
-                    añadiendoAmigo = añadiendoAmigo
+                    onAnhadirAmigo = onAnhadirAmigo,
+                    anhadiendoAmigo = anhadiendoAmigo
                 )
             }
         }
@@ -514,8 +513,8 @@ fun BuscarUsuarioCard(
 fun UsuarioEncontradoItem(
     usuario: Usuario,
     yaSonAmigos: Boolean,
-    onAñadirAmigo: () -> Unit,
-    añadiendoAmigo: Boolean
+    onAnhadirAmigo: () -> Unit,
+    anhadiendoAmigo: Boolean
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -547,14 +546,14 @@ fun UsuarioEncontradoItem(
                 )
             } else {
                 Button(
-                    onClick = onAñadirAmigo,
-                    enabled = !añadiendoAmigo,
+                    onClick = onAnhadirAmigo,
+                    enabled = !anhadiendoAmigo,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = TealPastel,
                         contentColor = Color.Black
                     )
                 ) {
-                    if (añadiendoAmigo) {
+                    if (anhadiendoAmigo) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             color = Color.Black
