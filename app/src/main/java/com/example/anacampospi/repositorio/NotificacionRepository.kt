@@ -146,7 +146,7 @@ class NotificacionRepository(
             val notificacion = mapOf(
                 "tipo" to "nuevo_match",
                 "tokens" to tokens,
-                "titulo" to "¡Match! 🍿",
+                "titulo" to "¡Match en $nombreGrupo! 🍿",
                 "mensaje" to "Tu grupo ha hecho Match. ¡Entra para descubrirlo!",
                 "data" to mapOf(
                     "tipo" to "nuevo_match",

@@ -23,6 +23,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +33,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.BuildConfig
 import com.example.anacampospi.data.tmdb.TmdbClient
+import com.example.anacampospi.services.NotificationTracker
 import com.example.anacampospi.ui.componentes.ContentDetailModal
 import com.example.anacampospi.ui.componentes.ContentDetails
 import com.example.anacampospi.ui.componentes.MatchCard
@@ -54,17 +56,23 @@ fun MatchesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
 
     // Estado del modal de detalles
     var selectedContent by remember { mutableStateOf<ContentDetails?>(null) }
     val tmdbRepository = remember { TmdbClient.createRepository(BuildConfig.TMDB_API_KEY) }
 
     // Recargar matches cuando la pantalla vuelve a primer plano
-    DisposableEffect(lifecycleOwner) {
+    // ON_START se dispara al crear el composable y al volver de segundo plano
+    DisposableEffect(lifecycleOwner, grupoId, grupoIdInicial) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    // Recargar cuando la pantalla vuelve a ser visible
+                Lifecycle.Event.ON_START -> {
+                    // Limpiar el estado de notificaciones cuando el usuario abre la pantalla
+                    // Esto permite que las notificaciones de nuevos matches vuelvan a sonar
+                    NotificationTracker.clearAllNotifications(context)
+
+                    // Recargar cuando la pantalla se vuelve visible
                     viewModel.cargarMatches(grupoId = grupoId, grupoIdInicial = grupoIdInicial)
                 }
                 else -> {}
@@ -74,11 +82,6 @@ fun MatchesScreen(
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
-    }
-
-    // Cargar matches al iniciar
-    LaunchedEffect(grupoId, grupoIdInicial) {
-        viewModel.cargarMatches(grupoId = grupoId, grupoIdInicial = grupoIdInicial)
     }
 
     // Modal de detalles

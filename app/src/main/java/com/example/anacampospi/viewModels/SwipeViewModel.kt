@@ -182,7 +182,9 @@ class SwipeViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     error = null,
-                    sinContenido = true
+                    sinContenido = true,
+                    contenidoActual = null,  // Asegurar que esté vacío
+                    contenidoSiguiente = null  // Asegurar que esté vacío
                 )
             } else {
                 _uiState.value = _uiState.value.copy(
@@ -217,13 +219,28 @@ class SwipeViewModel : ViewModel() {
             )
 
             result.onSuccess { contenido ->
-                contentStack.addAll(contenido.filterVotados())
+                val nuevoContenido = contenido.filterVotados()
+                contentStack.addAll(nuevoContenido)
+
+                android.util.Log.d("SwipeViewModel", "Cargada página $currentPage: ${nuevoContenido.size} items nuevos, total en stack: ${contentStack.size}")
+
                 _uiState.value = _uiState.value.copy(
                     contenidoRestante = contentStack.size - 1
                 )
             }
 
             isLoadingMore = false
+
+            // Verificar si realmente se acabó el contenido después de cargar
+            if (contentStack.isEmpty()) {
+                android.util.Log.d("SwipeViewModel", "No hay más contenido después de cargar página $currentPage")
+                _uiState.value = _uiState.value.copy(
+                    sinContenido = true,
+                    contenidoActual = null,
+                    contenidoSiguiente = null,
+                    loading = false  // Asegurar que no esté en estado de carga
+                )
+            }
         }
     }
 
@@ -346,30 +363,9 @@ class SwipeViewModel : ViewModel() {
 
                     android.util.Log.d("SwipeViewModel", "Match con ${match.proveedores.size} proveedores: ${match.proveedores}")
 
-                    grupoRepository.guardarMatch(currentGrupoId!!, match).onSuccess {
-                        android.util.Log.d("SwipeViewModel", "Match guardado en Firestore correctamente")
-
-                        // Enviar notificación de match a todos los miembros del grupo
-                        grupoActual?.let { grupo ->
-                            viewModelScope.launch {
-                                // Notificar a todos excepto al usuario actual (ya está en la app)
-                                val otrosMiembros = grupo.miembros.filter { it != uid }
-
-                                if (otrosMiembros.isNotEmpty()) {
-                                    notificacionRepository.enviarNotificacionNuevoMatch(
-                                        uidsDestino = otrosMiembros,
-                                        nombreGrupo = grupo.nombre,
-                                        grupoId = grupo.idGrupo,
-                                        tituloContenido = contenidoConProveedores.titulo,
-                                        idContenido = contenidoConProveedores.idContenido
-                                    ).onSuccess {
-                                        android.util.Log.d("SwipeViewModel", "Notificación de match enviada")
-                                    }.onFailure { error ->
-                                        android.util.Log.e("SwipeViewModel", "Error enviando notificación: ${error.message}")
-                                    }
-                                }
-                            }
-                        }
+                    grupoRepository.guardarMatch(currentGrupoId!!, match).onSuccess { isNewMatch ->
+                        android.util.Log.d("SwipeViewModel", "Match guardado en Firestore. ¿Es nuevo? $isNewMatch")
+                        // NO se envían notificaciones de match
                     }.onFailure { error ->
                         android.util.Log.e("SwipeViewModel", "Error guardando match: ${error.message}", error)
                     }
@@ -404,26 +400,39 @@ class SwipeViewModel : ViewModel() {
      * Avanza al siguiente contenido
      */
     private fun avanzarAlSiguiente() {
-        if (contentStack.isEmpty()) return
+        if (contentStack.isEmpty()) {
+            android.util.Log.d("SwipeViewModel", "avanzarAlSiguiente: contentStack ya vacío")
+            return
+        }
 
         contentStack.removeAt(0)
+        android.util.Log.d("SwipeViewModel", "avanzarAlSiguiente: contenido restante en stack: ${contentStack.size}")
 
         // Si quedan pocas tarjetas, cargar más (aumentado a 10 para cargar antes)
         if (contentStack.size <= 10 && !isLoadingMore) {
+            android.util.Log.d("SwipeViewModel", "Pocas cards (${contentStack.size}), cargando más...")
             cargarMasContenido()
         }
 
-        _uiState.value = _uiState.value.copy(
-            contenidoActual = contentStack.firstOrNull(),
-            contenidoSiguiente = contentStack.getOrNull(1), // Actualizar siguiente película
-            contenidoRestante = contentStack.size - 1,
-            sinContenido = false // Resetear el flag
-        )
+        // Actualizar UI
+        val siguiente = contentStack.firstOrNull()
+        val despuesSiguiente = contentStack.getOrNull(1)
 
-        // Si no hay más contenido Y no estamos cargando más
-        if (contentStack.isEmpty() && !isLoadingMore) {
+        if (siguiente == null) {
+            // No hay más contenido
+            android.util.Log.d("SwipeViewModel", "No hay más contenido, mostrando pantalla 'Todo visto'")
             _uiState.value = _uiState.value.copy(
+                contenidoActual = null,
+                contenidoSiguiente = null,
+                contenidoRestante = 0,
                 sinContenido = true
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                contenidoActual = siguiente,
+                contenidoSiguiente = despuesSiguiente,
+                contenidoRestante = contentStack.size - 1,
+                sinContenido = false
             )
         }
     }

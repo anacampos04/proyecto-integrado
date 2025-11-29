@@ -94,13 +94,18 @@ fun ConfiguracionRondaScreen(
         if (seriesEnabled) add(TipoContenido.SERIE)
     }.takeIf { it.isNotEmpty() } ?: listOf(TipoContenido.PELICULA) // Por defecto películas si ninguno está activo
 
+    // Al menos un tipo de contenido debe estar activo
+    val alMenosUnTipoActivo = peliculasEnabled || seriesEnabled
+    
     // Validar que el botón pueda estar habilitado
     val puedeIniciarRonda = if (uiState.esInvitado) {
         // Invitado: solo necesita plataformas (géneros son opcionales)
         plataformasSeleccionadas.isNotEmpty()
     } else {
-        // Creador: necesita amigos y plataformas (géneros son opcionales)
-        amigosSeleccionados.isNotEmpty() && plataformasSeleccionadas.isNotEmpty()
+        // Creador: necesita amigos, plataformas, y al menos un tipo de contenido
+        amigosSeleccionados.isNotEmpty() && 
+        plataformasSeleccionadas.isNotEmpty() && 
+        alMenosUnTipoActivo
     }
 
     Box(
@@ -361,7 +366,12 @@ fun ConfiguracionRondaScreen(
                                         }
                                         Switch(
                                             checked = peliculasEnabled,
-                                            onCheckedChange = { peliculasEnabled = it },
+                                            onCheckedChange = { nuevo ->
+                                                // No permitir desactivar si es el único activo
+                                                if (nuevo || seriesEnabled) {
+                                                    peliculasEnabled = nuevo
+                                                }
+                                            },
                                             colors = SwitchDefaults.colors(
                                                 checkedThumbColor = Color.Black,
                                                 checkedTrackColor = TealPastel,
@@ -408,7 +418,12 @@ fun ConfiguracionRondaScreen(
                                         }
                                         Switch(
                                             checked = seriesEnabled,
-                                            onCheckedChange = { seriesEnabled = it },
+                                            onCheckedChange = { nuevo ->
+                                                // No permitir desactivar si es el único activo
+                                                if (nuevo || peliculasEnabled) {
+                                                    seriesEnabled = nuevo
+                                                }
+                                            },
                                             colors = SwitchDefaults.colors(
                                                 checkedThumbColor = Color.Black,
                                                 checkedTrackColor = TealPastel,
@@ -566,6 +581,25 @@ fun ConfiguracionRondaScreen(
                                     )
                                     Text(
                                         text = "Debes seleccionar al menos una plataforma",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = PopcornYellow,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else if (!alMenosUnTipoActivo) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 32.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Warning,
+                                        contentDescription = null,
+                                        tint = PopcornYellow,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Debes activar al menos películas o series",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = PopcornYellow,
                                         textAlign = TextAlign.Center

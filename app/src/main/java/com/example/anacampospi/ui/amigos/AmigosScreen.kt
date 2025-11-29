@@ -50,11 +50,12 @@ fun AmigosScreen(
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
 
     // Recargar amigos cuando la pantalla vuelve a primer plano
+    // ON_START se dispara al crear el composable y al volver de segundo plano
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    // Recargar amigos y solicitudes cuando vuelve a primer plano
+                Lifecycle.Event.ON_START -> {
+                    // Recargar amigos y solicitudes cuando la pantalla se vuelve visible
                     viewModel.cargarAmigos()
                     viewModel.cargarSolicitudesEnviadas()
                 }

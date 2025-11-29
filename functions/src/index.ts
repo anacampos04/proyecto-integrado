@@ -7,6 +7,7 @@
 import {onDocumentCreated} from "firebase-functions/v2/firestore";
 import {initializeApp} from "firebase-admin/app";
 import {getMessaging} from "firebase-admin/messaging";
+import {getFirestore} from "firebase-admin/firestore";
 import * as logger from "firebase-functions/logger";
 
 // Inicializar Firebase Admin
@@ -52,24 +53,12 @@ export const enviarNotificacion = onDocumentCreated(
     );
     logger.info(`Título: ${titulo}, Mensaje: ${mensaje}`);
 
-    // Construir el mensaje de notificación
-    // Para matches, usar un tag de Android para agrupar automáticamente
-    const androidConfig = tipo === "nuevo_match" &&
-      dataPayload.grupoId ? {
-        notification: {
-          // Agrupa notificaciones del mismo grupo
-          tag: `match_${dataPayload.grupoId}`,
-          channelId: "matches",
-        },
-      } : undefined;
-
     const message = {
       notification: {
         title: titulo,
         body: mensaje,
       },
       data: dataPayload,
-      ...(androidConfig && {android: androidConfig}),
       tokens: tokens,
     };
 

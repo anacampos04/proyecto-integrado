@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat
 import com.example.anacampospi.MainActivity
 import com.example.anacampospi.R
 import com.example.anacampospi.repositorio.UsuarioRepository
+import com.example.anacampospi.util.AppStateUtil
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -122,6 +123,38 @@ class PopcornFirebaseMessagingService : FirebaseMessagingService() {
         mensaje: String,
         data: Map<String, String> = emptyMap()
     ) {
+        // Verificar si la app está en primer plano
+        val appEnPrimerPlano = AppStateUtil.isAppInForeground(this)
+        if (appEnPrimerPlano) {
+            Log.d(TAG, "App en primer plano, NO se muestra notificación: $titulo")
+            return // No mostrar notificaciones si la app está en primer plano
+        }
+
+        Log.d(TAG, "App en segundo plano o cerrada, mostrando notificación: $titulo")
+
+        val tipo = data["tipo"]
+
+        // Para matches: verificar si ya ha sido notificado antes
+        // Si ya se notificó, NO mostrar nada (ni silenciosa)
+        if (tipo == "nuevo_match" && data["grupoId"] != null) {
+            val grupoId = data["grupoId"]!!
+            val contentId = data["contentId"] // Puede ser null
+
+            // Verificar si este match ya ha sonado antes
+            val alreadyNotified = NotificationTracker.hasBeenNotified(this, grupoId, contentId)
+
+            if (alreadyNotified) {
+                // Ya se notificó antes: NO MOSTRAR NADA
+                Log.d(TAG, "Match del grupo $grupoId ya notificado previamente, se ignora completamente")
+                return // Salir sin mostrar notificación
+            }
+
+            // Si llegamos aquí es porque NO se ha notificado antes
+            // Marcar como notificado para evitar futuras notificaciones
+            NotificationTracker.markAsNotified(this, grupoId, contentId)
+            Log.d(TAG, "Primer match del grupo $grupoId, se mostrará con sonido")
+        }
+
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         // Crear canal de notificaciones para Android O+
@@ -167,7 +200,14 @@ class PopcornFirebaseMessagingService : FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // Construir la notificación con configuración para heads-up
+        // Para matches, usar ID fijo basado en grupoId para agrupar
+        val notificationId: Int = if (tipo == "nuevo_match" && data["grupoId"] != null) {
+            data["grupoId"].hashCode()
+        } else {
+            System.currentTimeMillis().toInt()
+        }
+
+        // Construir la notificación
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(titulo)
@@ -178,10 +218,10 @@ class PopcornFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setVibrate(longArrayOf(0, 250, 250, 250)) // Patrón de vibración
             .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI) // Sonido
-            .setDefaults(NotificationCompat.DEFAULT_ALL) // Sonido, vibración y luz por defecto
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Visible en pantalla de bloqueo
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationId, notification)
+        Log.d(TAG, "Notificación mostrada con ID: $notificationId")
     }
 }

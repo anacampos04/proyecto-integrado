@@ -89,6 +89,19 @@ fun SwipeScreen(
                 )
             )
     ) {
+        // Log del estado actual para debugging
+        LaunchedEffect(uiState) {
+            android.util.Log.d("SwipeScreen", """
+                Estado actual:
+                - loading: ${uiState.loading}
+                - error: ${uiState.error}
+                - sinContenido: ${uiState.sinContenido}
+                - esperandoOtrosUsuarios: ${uiState.esperandoOtrosUsuarios}
+                - contenidoActual: ${uiState.contenidoActual?.titulo ?: "null"}
+                - contenidoSiguiente: ${uiState.contenidoSiguiente?.titulo ?: "null"}
+            """.trimIndent())
+        }
+        
         when {
             // Esperando a otros usuarios (ronda no activa)
             uiState.esperandoOtrosUsuarios -> {
@@ -278,6 +291,11 @@ fun SwipeScreen(
 
             // Sin contenido
             uiState.sinContenido -> {
+                // Log para debugging
+                LaunchedEffect(Unit) {
+                    android.util.Log.d("SwipeScreen", "Mostrando pantalla 'Todo visto'. Matches: ${uiState.totalMatchesGrupo}")
+                }
+                
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -285,7 +303,9 @@ fun SwipeScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(20.dp),
-                        modifier = Modifier.padding(32.dp)
+                        modifier = Modifier
+                            .padding(32.dp)
+                            .fillMaxWidth()
                     ) {
                         // Icono de palomitas simple
                         Icon(

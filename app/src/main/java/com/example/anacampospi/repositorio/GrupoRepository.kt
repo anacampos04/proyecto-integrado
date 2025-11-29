@@ -389,16 +389,27 @@ class GrupoRepository(
     suspend fun guardarMatch(
         grupoId: String,
         match: com.example.anacampospi.modelo.Match
-    ): Result<Unit> {
+    ): Result<Boolean> {
         return try {
-            colGrupos
+            val matchRef = colGrupos
                 .document(grupoId)
                 .collection("matches")
                 .document(match.idContenido)
-                .set(match)
-                .await()
 
-            Result.success(Unit)
+            // Verificar si el match ya existe
+            val existingMatch = matchRef.get().await()
+            val isNewMatch = !existingMatch.exists()
+
+            if (isNewMatch) {
+                // Match nuevo: guardarlo
+                matchRef.set(match).await()
+                android.util.Log.d("GrupoRepository", "Match NUEVO guardado: ${match.idContenido}")
+            } else {
+                android.util.Log.d("GrupoRepository", "Match YA EXISTE: ${match.idContenido}, no se envía notificación")
+            }
+
+            // Devolver true si es un match nuevo, false si ya existía
+            Result.success(isNewMatch)
         } catch (e: Exception) {
             Result.failure(e)
         }

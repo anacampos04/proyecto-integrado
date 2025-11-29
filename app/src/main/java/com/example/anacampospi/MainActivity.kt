@@ -187,6 +187,9 @@ fun MainScreenWithNavigation(
     val tutorialViewModel: TutorialViewModel = viewModel()
     val tutorialState by tutorialViewModel.uiState.collectAsState()
 
+    // ViewModel de Home para poder forzar recarga
+    val homeViewModel: com.example.anacampospi.viewModels.HomeViewModel = viewModel()
+
     // Solicitar permiso de notificaciones en Android 13+ (API 33+)
     val context = LocalContext.current
 
@@ -262,6 +265,10 @@ fun MainScreenWithNavigation(
                         popUpTo("home") { inclusive = true }
                         launchSingleTop = true
                     }
+                    // Forzar recarga de grupos después de navegar
+                    kotlinx.coroutines.delay(300) // Esperar a que la navegación complete
+                    android.util.Log.d("MainActivity", "Forzando recarga de grupos")
+                    homeViewModel.cargarGrupos()
                 }
                 "ronda_activada" -> {
                     android.util.Log.d("MainActivity", "Navegando a home (activada)")
@@ -269,6 +276,10 @@ fun MainScreenWithNavigation(
                         popUpTo("home") { inclusive = true }
                         launchSingleTop = true
                     }
+                    // Forzar recarga de grupos después de navegar
+                    kotlinx.coroutines.delay(300)
+                    android.util.Log.d("MainActivity", "Forzando recarga de grupos")
+                    homeViewModel.cargarGrupos()
                 }
                 "nuevo_match" -> {
                     android.util.Log.d("MainActivity", "Navegando a matches")
@@ -380,7 +391,8 @@ fun MainScreenWithNavigation(
                         },
                         onConfigurarRonda = { grupoId ->
                             navController.navigate("configurarRonda/$grupoId")
-                        }
+                        },
+                        viewModel = homeViewModel // Usar el mismo viewModel
                     )
                 }
 

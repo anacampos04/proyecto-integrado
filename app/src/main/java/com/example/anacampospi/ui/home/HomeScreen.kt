@@ -57,11 +57,12 @@ fun HomeScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Recargar grupos cuando la pantalla vuelve a primer plano
+    // ON_START se dispara al crear el composable y al volver de segundo plano
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> {
-                    // Recargar cuando la pantalla vuelve a ser visible
+                Lifecycle.Event.ON_START -> {
+                    // Recargar cuando la pantalla se vuelve visible
                     viewModel.cargarGrupos()
                 }
                 else -> {}
@@ -75,7 +76,7 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         visible = true
-        viewModel.cargarGrupos() // Carga inicial
+        // NO llamar a cargarGrupos aquí - el DisposableEffect ya lo hace en ON_START
     }
 
     // Mostrar mensaje de error
@@ -154,7 +155,7 @@ fun HomeScreen(
                         .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = PopcornYellow)
+                    CircularProgressIndicator(color = TealPastel)
                 }
             } else if (uiState.grupos.isEmpty()) {
                 // Estado vacío
