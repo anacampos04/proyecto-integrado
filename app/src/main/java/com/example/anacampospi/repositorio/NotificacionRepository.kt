@@ -59,7 +59,7 @@ class NotificacionRepository(
                 "tipo" to "invitacion_ronda",
                 "tokens" to tokens,
                 "titulo" to "Nueva fiesta 🎉",
-                "mensaje" to "$nombreCreador te ha invitado a '$nombreGrupo'. ¡Configura tus preferencias!",
+                "mensaje" to "$nombreCreador te ha invitado a '$nombreGrupo'. ¡Empieza la fiesta!",
                 "data" to mapOf(
                     "tipo" to "invitacion_ronda",
                     "grupoId" to grupoId,
@@ -146,8 +146,8 @@ class NotificacionRepository(
             val notificacion = mapOf(
                 "tipo" to "nuevo_match",
                 "tokens" to tokens,
-                "titulo" to "¡Match en $nombreGrupo!",
-                "mensaje" to "A tu grupo le gusta '$tituloContenido'",
+                "titulo" to "¡Match! 🍿",
+                "mensaje" to "Tu grupo ha hecho Match. ¡Entra para descubrirlo!",
                 "data" to mapOf(
                     "tipo" to "nuevo_match",
                     "grupoId" to grupoId,

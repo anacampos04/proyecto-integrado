@@ -38,6 +38,7 @@ export const enviarNotificacion = onDocumentCreated(
     const titulo: string = data.titulo || "PopcornTribu";
     const mensaje: string = data.mensaje || "";
     const dataPayload = data.data || {};
+    const tipo: string = data.tipo || "";
 
     if (tokens.length === 0) {
       logger.info("No hay tokens para enviar la notificación");
@@ -52,12 +53,23 @@ export const enviarNotificacion = onDocumentCreated(
     logger.info(`Título: ${titulo}, Mensaje: ${mensaje}`);
 
     // Construir el mensaje de notificación
+    // Para matches, usar un tag de Android para agrupar automáticamente
+    const androidConfig = tipo === "nuevo_match" &&
+      dataPayload.grupoId ? {
+        notification: {
+          // Agrupa notificaciones del mismo grupo
+          tag: `match_${dataPayload.grupoId}`,
+          channelId: "matches",
+        },
+      } : undefined;
+
     const message = {
       notification: {
         title: titulo,
         body: mensaje,
       },
       data: dataPayload,
+      ...(androidConfig && {android: androidConfig}),
       tokens: tokens,
     };
 

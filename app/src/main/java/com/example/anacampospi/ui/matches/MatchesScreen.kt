@@ -23,9 +23,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.BuildConfig
 import com.example.anacampospi.data.tmdb.TmdbClient
@@ -50,10 +53,28 @@ fun MatchesScreen(
     viewModel: MatchesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Estado del modal de detalles
     var selectedContent by remember { mutableStateOf<ContentDetails?>(null) }
     val tmdbRepository = remember { TmdbClient.createRepository(BuildConfig.TMDB_API_KEY) }
+
+    // Recargar matches cuando la pantalla vuelve a primer plano
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    // Recargar cuando la pantalla vuelve a ser visible
+                    viewModel.cargarMatches(grupoId = grupoId, grupoIdInicial = grupoIdInicial)
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     // Cargar matches al iniciar
     LaunchedEffect(grupoId, grupoIdInicial) {
@@ -327,7 +348,7 @@ private fun FiltrosGrupoChips(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Chip "Todos" sin icono check y más redondeado
+        // Chip "Todos"
         FilterChip(
             selected = grupoSeleccionado == null,
             onClick = { onGrupoSeleccionado(null) },
@@ -335,7 +356,7 @@ private fun FiltrosGrupoChips(
             shape = RoundedCornerShape(20.dp)
         )
 
-        // Chips de grupos sin icono check y más redondeados
+        // Chips de grupos
         grupos.forEach { grupo ->
             FilterChip(
                 selected = grupoSeleccionado == grupo.id,

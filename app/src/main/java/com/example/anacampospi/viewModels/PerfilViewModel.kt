@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 data class PerfilUiState(
     val loading: Boolean = false,
     val usuario: Usuario? = null,
-    val error: String? = null
+    val error: String? = null,
+    val esUsuarioGoogle: Boolean = false
 )
 
 class PerfilViewModel(
@@ -44,20 +45,25 @@ class PerfilViewModel(
                 return@launch
             }
 
+            // Verificar si el usuario inició sesión con Google
+            val esUsuarioGoogle = authRepository.isGoogleUser()
+
             val resultado = usuarioRepository.getUsuario(uid)
 
             resultado.onSuccess { usuario ->
                 _uiState.value = _uiState.value.copy(
                     loading = false,
                     usuario = usuario,
-                    error = null
+                    error = null,
+                    esUsuarioGoogle = esUsuarioGoogle
                 )
             }
 
             resultado.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     loading = false,
-                    error = error.message
+                    error = error.message,
+                    esUsuarioGoogle = esUsuarioGoogle
                 )
             }
         }

@@ -8,7 +8,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -27,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.anacampospi.R
 import com.example.anacampospi.ui.theme.*
 
@@ -291,7 +289,6 @@ fun ModernOutlinedButton(
 
 /**
  * Card con efecto neumórfico para mensajes de error/éxito
- * Ahora con icono y fondo más limpio
  */
 @Composable
 fun ModernMessageCard(

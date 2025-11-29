@@ -158,7 +158,7 @@ fun SwipeScreen(
                         Button(
                             onClick = {
                                 val mensaje = "¡Hola! 👋\n\n" +
-                                        "Estoy esperando que configures tus preferencias para empezar nuestra ronda de votación en PopCornTribu.\n\n" +
+                                        "Estoy esperando que configures tus preferencias para empezar nuestra fiesta en PopCornTribu.\n\n" +
                                         "¡Entra a la app para que podamos empezar! 🎬🍿"
 
                                 try {

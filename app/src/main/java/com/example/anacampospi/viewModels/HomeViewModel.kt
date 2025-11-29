@@ -92,20 +92,38 @@ class HomeViewModel(
 
     /**
      * Elimina un grupo (cualquier miembro puede eliminarlo).
+     * Usa actualización optimista: primero elimina del estado local, luego de Firestore.
      */
     fun eliminarGrupo(idGrupo: String) {
         val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {
+            // Actualización optimista: eliminar de las listas locales inmediatamente
+            _uiState.value = _uiState.value.copy(
+                rondasActivas = _uiState.value.rondasActivas.filter { it.idGrupo != idGrupo },
+                rondasPendientes = _uiState.value.rondasPendientes.filter { it.idGrupo != idGrupo },
+                rondasEsperando = _uiState.value.rondasEsperando.filter { it.idGrupo != idGrupo },
+                grupos = _uiState.value.grupos.filter { it.idGrupo != idGrupo }
+            )
+
+            // Luego eliminar de Firestore
             val result = grupoRepository.eliminarGrupo(idGrupo, uid)
             result.onSuccess {
-                cargarGrupos() // Recargar lista
+                // Confirmación: ya está eliminado del estado local
+                android.util.Log.d("HomeViewModel", "Grupo eliminado exitosamente: $idGrupo")
+
+                // Esperar un momento para que Firestore propague la eliminación
+                kotlinx.coroutines.delay(500)
             }.onFailure { error ->
+                // Si falla, recargar para restaurar el estado correcto
+                android.util.Log.e("HomeViewModel", "Error al eliminar grupo: ${error.message}")
+                cargarGrupos()
+
                 // Convertir errores técnicos a mensajes amigables
                 val mensajeAmigable = when {
                     error.message?.contains("permission", ignoreCase = true) == true ||
                     error.message?.contains("denied", ignoreCase = true) == true ->
-                        "No puedes eliminar esta ronda porque ya tiene votos de otros usuarios"
+                        "No puedes eliminar esta ronda"
                     error.message?.contains("not found", ignoreCase = true) == true ->
                         "Esta ronda ya no existe"
                     error.message?.contains("network", ignoreCase = true) == true ->

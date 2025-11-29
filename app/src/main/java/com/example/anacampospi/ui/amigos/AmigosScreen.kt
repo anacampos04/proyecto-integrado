@@ -1,9 +1,13 @@
 package com.example.anacampospi.ui.amigos
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,15 +21,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.anacampospi.modelo.Usuario
 import com.example.anacampospi.ui.componentes.SwipeToDismissItem
 import com.example.anacampospi.ui.theme.*
 import com.example.anacampospi.viewModels.AmigosViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Pantalla para gestionar amigos: mostrar código propio, buscar usuarios y ver amigos.
@@ -39,6 +47,25 @@ fun AmigosScreen(
     var codigoBusqueda by remember { mutableStateOf("PCT-") }
     var visible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+
+    // Recargar amigos cuando la pantalla vuelve a primer plano
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    // Recargar amigos y solicitudes cuando vuelve a primer plano
+                    viewModel.cargarAmigos()
+                    viewModel.cargarSolicitudesEnviadas()
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     LaunchedEffect(Unit) {
         visible = true
@@ -273,10 +300,29 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Código destacado
+            // Código destacado (clickeable para copiar)
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            var mostrarCopiado by remember { mutableStateOf(false) }
+
+            LaunchedEffect(mostrarCopiado) {
+                if (mostrarCopiado) {
+                    kotlinx.coroutines.delay(2000)
+                    mostrarCopiado = false
+                }
+            }
+
             Box(
                 modifier = Modifier
                     .border(2.dp, TealPastel, RoundedCornerShape(12.dp))
+                    .clickable {
+                        if (codigo.isNotBlank()) {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("Código de invitación", codigo)
+                            clipboard.setPrimaryClip(clip)
+                            mostrarCopiado = true
+                        }
+                    }
                     .padding(horizontal = 24.dp, vertical = 12.dp)
             ) {
                 Text(
@@ -290,12 +336,43 @@ fun MiCodigoCard(codigo: String, nombreUsuario: String) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = "Comparte este código con tus amigos",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center
-            )
+            // Mensaje dinámico
+            AnimatedVisibility(
+                visible = mostrarCopiado,
+                enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 })
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        tint = TealPastel,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Copiado",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TealPastel,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = !mostrarCopiado,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Text(
+                    text = "Toca para copiar",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

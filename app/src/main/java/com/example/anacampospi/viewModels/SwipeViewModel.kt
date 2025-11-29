@@ -34,6 +34,7 @@ class SwipeViewModel : ViewModel() {
     private val usuarioRepository = UsuarioRepository()
     private val grupoRepository = GrupoRepository()
     private val matchesRepository = MatchesRepository()
+    private val notificacionRepository = com.example.anacampospi.repositorio.NotificacionRepository()
 
     private val _uiState = MutableStateFlow(SwipeUiState())
     val uiState: StateFlow<SwipeUiState> = _uiState.asStateFlow()
@@ -54,6 +55,9 @@ class SwipeViewModel : ViewModel() {
 
     // Miembros del grupo actual (para verificar matches)
     private var miembrosGrupo: List<String> = emptyList()
+
+    // Grupo actual completo (para notificaciones)
+    private var grupoActual: Grupo? = null
 
     /**
      * Inicializa el ViewModel con un grupo.
@@ -91,6 +95,7 @@ class SwipeViewModel : ViewModel() {
 
                 // Guardar los miembros del grupo para verificar matches
                 miembrosGrupo = grupo.miembros
+                grupoActual = grupo // Guardar grupo completo para notificaciones
                 android.util.Log.d("SwipeViewModel", "Grupo cargado. Miembros: $miembrosGrupo (total: ${miembrosGrupo.size})")
 
                 // Cargar el número de matches del grupo
@@ -316,22 +321,55 @@ class SwipeViewModel : ViewModel() {
                 if (hayMatch) {
                     android.util.Log.d("SwipeViewModel", "¡MATCH! TODOS los miembros votaron ME_GUSTA: ${contenido.titulo}")
 
-                    // Guardar el match en Firestore
+                    // Cargar proveedores si no están cargados
+                    val contenidoConProveedores = if (contenido.proveedores.isEmpty()) {
+                        android.util.Log.d("SwipeViewModel", "Cargando proveedores para el match...")
+                        val enrichResult = tmdbRepository.enrichContentDetails(contenido)
+                        enrichResult.getOrNull() ?: contenido
+                    } else {
+                        contenido
+                    }
+
+                    // Guardar el match en Firestore con los proveedores cargados
                     val match = com.example.anacampospi.modelo.Match(
-                        idContenido = contenido.idContenido,
+                        idContenido = contenidoConProveedores.idContenido,
                         usuariosCoincidentes = miembrosGrupo,
                         primerCoincidenteEn = null, // ServerTimestamp
                         actualizadoEn = null,
-                        titulo = contenido.titulo,
-                        posterUrl = contenido.posterUrl,
-                        tipo = contenido.tipo,
-                        anioEstreno = contenido.anioEstreno,
-                        proveedores = contenido.proveedores,
-                        puntuacion = contenido.puntuacion
+                        titulo = contenidoConProveedores.titulo,
+                        posterUrl = contenidoConProveedores.posterUrl,
+                        tipo = contenidoConProveedores.tipo,
+                        anioEstreno = contenidoConProveedores.anioEstreno,
+                        proveedores = contenidoConProveedores.proveedores,
+                        puntuacion = contenidoConProveedores.puntuacion
                     )
+
+                    android.util.Log.d("SwipeViewModel", "Match con ${match.proveedores.size} proveedores: ${match.proveedores}")
 
                     grupoRepository.guardarMatch(currentGrupoId!!, match).onSuccess {
                         android.util.Log.d("SwipeViewModel", "Match guardado en Firestore correctamente")
+
+                        // Enviar notificación de match a todos los miembros del grupo
+                        grupoActual?.let { grupo ->
+                            viewModelScope.launch {
+                                // Notificar a todos excepto al usuario actual (ya está en la app)
+                                val otrosMiembros = grupo.miembros.filter { it != uid }
+
+                                if (otrosMiembros.isNotEmpty()) {
+                                    notificacionRepository.enviarNotificacionNuevoMatch(
+                                        uidsDestino = otrosMiembros,
+                                        nombreGrupo = grupo.nombre,
+                                        grupoId = grupo.idGrupo,
+                                        tituloContenido = contenidoConProveedores.titulo,
+                                        idContenido = contenidoConProveedores.idContenido
+                                    ).onSuccess {
+                                        android.util.Log.d("SwipeViewModel", "Notificación de match enviada")
+                                    }.onFailure { error ->
+                                        android.util.Log.e("SwipeViewModel", "Error enviando notificación: ${error.message}")
+                                    }
+                                }
+                            }
+                        }
                     }.onFailure { error ->
                         android.util.Log.e("SwipeViewModel", "Error guardando match: ${error.message}", error)
                     }
@@ -339,7 +377,7 @@ class SwipeViewModel : ViewModel() {
                     // Actualizar UI para mostrar el diálogo
                     _uiState.value = _uiState.value.copy(
                         hayMatch = true,
-                        contenidoMatch = contenido
+                        contenidoMatch = contenidoConProveedores
                     )
                 } else {
                     android.util.Log.d("SwipeViewModel", "No hay match aún. Esperando a que todos voten.")

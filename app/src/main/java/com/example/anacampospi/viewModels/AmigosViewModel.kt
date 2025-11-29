@@ -186,7 +186,7 @@ class AmigosViewModel(
     /**
      * Carga las solicitudes enviadas que están pendientes.
      */
-    private fun cargarSolicitudesEnviadas() {
+    fun cargarSolicitudesEnviadas() {
         val uid = auth.currentUser?.uid ?: return
 
         viewModelScope.launch {

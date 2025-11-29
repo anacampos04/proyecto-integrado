@@ -370,8 +370,14 @@ fun ContentDetailModal(
                             }
                         }
 
-                        // Plataformas disponibles (desde el match guardado en Firestore)
-                        if (detallesCompletos.proveedores.isNotEmpty()) {
+                        // Plataformas disponibles (desde el match guardado en Firestore o fallback a las del grupo)
+                        val proveedoresParaMostrar = if (detallesCompletos.proveedores.isNotEmpty()) {
+                            detallesCompletos.proveedores
+                        } else {
+                            detallesCompletos.plataformasGrupo
+                        }
+
+                        if (proveedoresParaMostrar.isNotEmpty()) {
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
@@ -381,37 +387,25 @@ fun ContentDetailModal(
                                     fontWeight = FontWeight.Bold
                                 )
 
-                                val plataformas = PlataformasCatalogo.getPlataformas(detallesCompletos.proveedores)
+                                val plataformas = PlataformasCatalogo.getPlataformas(proveedoresParaMostrar)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     plataformas.forEach { plataforma ->
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(RoundedCornerShape(12.dp)),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Box(
+                                            androidx.compose.foundation.Image(
+                                                painter = painterResource(id = plataforma.icono),
+                                                contentDescription = plataforma.nombre,
                                                 modifier = Modifier
-                                                    .size(48.dp)
-                                                    .clip(RoundedCornerShape(8.dp)),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                androidx.compose.foundation.Image(
-                                                    painter = painterResource(id = plataforma.icono),
-                                                    contentDescription = "Logo ${plataforma.nombre}",
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .padding(4.dp),
-                                                    contentScale = ContentScale.Fit
-                                                )
-                                            }
-                                            Text(
-                                                text = plataforma.nombre,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                textAlign = TextAlign.Center,
-                                                maxLines = 2
+                                                    .fillMaxSize()
+                                                    .padding(6.dp),
+                                                contentScale = ContentScale.Fit
                                             )
                                         }
                                     }

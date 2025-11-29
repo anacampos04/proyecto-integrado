@@ -1,6 +1,8 @@
 package com.example.anacampospi
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -58,6 +60,9 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
+        // Borrar todas las notificaciones al abrir la app
+        clearAllNotifications()
+
         // Procesar intent inicial
         _intentState.value = intent
         // Firebase pasa los datos del payload "data" directamente como extras
@@ -69,6 +74,18 @@ class MainActivity : ComponentActivity() {
                 AppNavigation()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Borrar notificaciones cuando la app vuelve a primer plano
+        clearAllNotifications()
+    }
+
+    private fun clearAllNotifications() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancelAll()
+        android.util.Log.d("MainActivity", "Todas las notificaciones borradas")
     }
 
     override fun onNewIntent(intent: Intent) {

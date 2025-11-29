@@ -173,6 +173,37 @@ fun MatchCard(
                     }
                 }
 
+                // Plataformas disponibles (de la API o fallback a las del grupo)
+                val proveedores = if (match.proveedores.isNotEmpty()) {
+                    match.proveedores
+                } else {
+                    matchData.plataformasGrupo
+                }
+
+                if (proveedores.isNotEmpty()) {
+                    val plataformas = PlataformasCatalogo.getPlataformas(proveedores)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        plataformas.take(4).forEach { plataforma ->
+                            androidx.compose.foundation.Image(
+                                painter = painterResource(id = plataforma.icono),
+                                contentDescription = plataforma.nombre,
+                                modifier = Modifier.size(24.dp),
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+                        if (plataformas.size > 4) {
+                            Text(
+                                text = "+${plataformas.size - 4}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
                 // Usuarios coincidentes
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),

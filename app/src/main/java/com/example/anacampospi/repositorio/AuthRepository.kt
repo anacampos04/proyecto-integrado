@@ -39,6 +39,15 @@ class AuthRepository(
     fun currentUser() = auth.currentUser
 
     /**
+     * Verifica si el usuario actual inició sesión con Google.
+     * @return true si el usuario usó Google Sign-In, false en caso contrario
+     */
+    fun isGoogleUser(): Boolean {
+        val user = auth.currentUser ?: return false
+        return user.providerData.any { it.providerId == GoogleAuthProvider.PROVIDER_ID }
+    }
+
+    /**
      * Reautentica al usuario con su contraseña actual.
      * Necesario antes de operaciones sensibles como cambiar contraseña.
      */

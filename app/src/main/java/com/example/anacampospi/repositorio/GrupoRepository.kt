@@ -88,7 +88,7 @@ class GrupoRepository(
             // Actualizar el documento con su propio ID
             docRef.update("idGrupo", docRef.id).await()
 
-            // Enviar notificaciones a los miembros invitados (excluyendo al creador)
+            // Enviar notificaciones de invitación inmediatamente a los miembros
             try {
                 val miembrosInvitados = miembrosFinales.filter { it != creadoPor }
                 if (miembrosInvitados.isNotEmpty()) {
@@ -210,7 +210,7 @@ class GrupoRepository(
                 )
             ).await()
 
-            // Enviar notificaciones a todos los miembros EXCEPTO al que acaba de configurar
+            // Enviar notificación de ronda activada a todos EXCEPTO al último en configurar
             try {
                 notificacionRepo.enviarNotificacionRondaActivada(
                     uidsDestino = grupo.miembros,
@@ -315,6 +315,7 @@ class GrupoRepository(
 
     /**
      * Elimina un grupo (cualquier miembro puede eliminarlo).
+     * Borra también los matches (subcollection) y los votos asociados.
      */
     suspend fun eliminarGrupo(idGrupo: String, uid: String): Result<Unit> {
         return try {
@@ -329,7 +330,29 @@ class GrupoRepository(
                 return Result.failure(Exception("No puedes eliminar un grupo del que no eres miembro"))
             }
 
+            // 1. Eliminar todos los matches (subcollection)
+            val matchesSnapshot = colGrupos.document(idGrupo)
+                .collection("matches")
+                .get()
+                .await()
+
+            matchesSnapshot.documents.forEach { matchDoc ->
+                matchDoc.reference.delete().await()
+            }
+
+            // 2. Eliminar todos los votos asociados a este grupo
+            val votosSnapshot = db.collection("votos")
+                .whereEqualTo("grupoId", idGrupo)
+                .get()
+                .await()
+
+            votosSnapshot.documents.forEach { votoDoc ->
+                votoDoc.reference.delete().await()
+            }
+
+            // 3. Finalmente eliminar el documento del grupo
             colGrupos.document(idGrupo).delete().await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

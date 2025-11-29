@@ -55,7 +55,7 @@ service cloud.firestore {
     // - Cualquier usuario autenticado puede CREAR grupos
     // - Solo los MIEMBROS pueden LEER el grupo
     // - ACTUALIZAR: el creador puede actualizar todo, los miembros pueden actualizar su configuración
-    // - Solo el CREADOR puede ELIMINAR el grupo
+    // - Cualquier MIEMBRO puede ELIMINAR el grupo y todo su contenido
     match /grupos/{groupId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null && request.auth.uid in resource.data.miembros;
@@ -67,33 +67,43 @@ service cloud.firestore {
          // Verificar que solo se modifican campos permitidos
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['configuraciones', 'estado', 'filtros', 'filtrosActualizadosEn']))
       );
-      allow delete: if request.auth != null && request.auth.uid == resource.data.creadoPor;
+      // CAMBIADO: Cualquier miembro puede eliminar el grupo
+      allow delete: if request.auth != null && request.auth.uid in resource.data.miembros;
 
-      // Votos dentro de grupos (subcolecci\u00f3n)
+      // Votos dentro de grupos (subcolección) - NO SE USAN, los votos están en /votos global
       match /votos/{voteId} {
         allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
         allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
         allow update: if request.auth != null && resource.data.idUsuario == request.auth.uid;
-        allow delete: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+        // CAMBIADO: Cualquier miembro del grupo puede eliminar votos al borrar el grupo
+        allow delete: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
       }
 
-      // Matches dentro de grupos (subcolecci\u00f3n)
+      // Matches dentro de grupos (subcolección)
       match /matches/{matchId} {
         allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
         allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
         allow update: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
-        allow delete: if request.auth != null && request.auth.uid == resource.data.creadoPor;
+        // CAMBIADO: Cualquier miembro del grupo puede eliminar matches al borrar el grupo
+        allow delete: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/grupos/$(groupId)).data.miembros;
       }
     }
 
-    // ===== VOTOS GLOBALES (opcional, si se usan) =====
+    // ===== VOTOS GLOBALES =====
     // - Los usuarios pueden crear y leer votos
     // - Solo el propietario puede actualizar/eliminar sus votos
+    // - Excepción: al eliminar un grupo, cualquier miembro puede eliminar votos de ese grupo
     match /votos/{votoId} {
       allow create: if request.auth != null;
       allow read: if request.auth != null;
       allow update: if request.auth != null && resource.data.idUsuario == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.idUsuario == request.auth.uid;
+      // CAMBIADO: Permitir eliminar si eres el dueño del voto O si eres miembro del grupo asociado
+      allow delete: if request.auth != null && (
+        resource.data.idUsuario == request.auth.uid ||
+        // Permitir si el voto pertenece a un grupo donde el usuario es miembro
+        (exists(/databases/$(database)/documents/grupos/$(resource.data.grupoId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/grupos/$(resource.data.grupoId)).data.miembros)
+      );
     }
 
     // ===== NOTIFICACIONES =====

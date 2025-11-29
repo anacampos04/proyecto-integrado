@@ -339,12 +339,20 @@ fun PerfilScreen(
                                 )
 
                                 // Botón de cambiar contraseña
+                                val esUsuarioGoogle = uiState.esUsuarioGoogle
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(12.dp))
-                                        .clickable { mostrarCambiarContrasena = true }
-                                        .background(SurfaceDark.copy(alpha = 0.4f))
+                                        .clickable(enabled = !esUsuarioGoogle) {
+                                            mostrarCambiarContrasena = true
+                                        }
+                                        .background(
+                                            if (esUsuarioGoogle)
+                                                SurfaceDark.copy(alpha = 0.2f)
+                                            else
+                                                SurfaceDark.copy(alpha = 0.4f)
+                                        )
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
@@ -356,27 +364,41 @@ fun PerfilScreen(
                                         Icon(
                                             imageVector = Icons.Default.Lock,
                                             contentDescription = null,
-                                            tint = TealPastel
+                                            tint = if (esUsuarioGoogle)
+                                                TealPastel.copy(alpha = 0.5f)
+                                            else
+                                                TealPastel
                                         )
                                         Column {
                                             Text(
                                                 text = "Cambiar contraseña",
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 fontWeight = FontWeight.Medium,
-                                                color = Color.White
+                                                color = if (esUsuarioGoogle)
+                                                    Color.White.copy(alpha = 0.4f)
+                                                else
+                                                    Color.White
                                             )
                                             Text(
-                                                text = "Actualiza tu contraseña",
+                                                text = if (esUsuarioGoogle)
+                                                    "No disponible para cuentas de Google"
+                                                else
+                                                    "Actualiza tu contraseña",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = Color.White.copy(alpha = 0.6f)
+                                                color = if (esUsuarioGoogle)
+                                                    Color.White.copy(alpha = 0.4f)
+                                                else
+                                                    Color.White.copy(alpha = 0.6f)
                                             )
                                         }
                                     }
-                                    Icon(
-                                        imageVector = Icons.Default.ChevronRight,
-                                        contentDescription = null,
-                                        tint = Color.White.copy(alpha = 0.4f)
-                                    )
+                                    if (!esUsuarioGoogle) {
+                                        Icon(
+                                            imageVector = Icons.Default.ChevronRight,
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.4f)
+                                        )
+                                    }
                                 }
                             }
                         }

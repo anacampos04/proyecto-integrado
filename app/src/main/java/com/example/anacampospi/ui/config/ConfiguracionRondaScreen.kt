@@ -747,10 +747,11 @@ private fun ModernGeneroChip(
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f),
                 maxLines = 1,
-                modifier = Modifier.weight(1f, fill = false)
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = true)
             )
             if (isSelected) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Seleccionado",
