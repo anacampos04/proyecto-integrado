@@ -87,7 +87,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 - [x] Creación de pantalla de amigos  
 - [x] Pantalla de detalles del contenido  (configuradion de ronda)
 - [x] Ver rondas  
-- [ ] Documentación v3  
+- [x] Documentación v3  
 
 **Entrega quincenal:**  
 - ✅ Amigos funcionales  
@@ -102,7 +102,7 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **Tareas:**
 - [x] Pantalla de matches  
 - [x] Detectar matches  
-- [ ] Documentación v4  
+- [x] Documentación v4  
 - [x] Pulir diseño general  
 
 **Entrega quincenal:**  
@@ -117,16 +117,8 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 **Tareas:**
 - [x] Pruebas de funcionamiento  
 - [x] Corrección de errores  
-- [ ] Documentación v5  
+- [x] Documentación v5  
 
 **Entrega final:**  
 - ✅ App completa y funcional  
 - ✅ Documentación final  
-
-## 📑 Modificaciones en la documentación
-- Modificaciones 16/Octubre
-  - Modificado el diagrama de clases había clases vacías y su contenido en otras clases, debido a mal tabulación del UML y no me había dado cuenta. Además actualizado el tipo de datos, tanto en el diagrama  de clases como en las entidades en Kotlin, de Instant a Timestamp que funciona mejor en Firebase.
-  - Modificado el modelo ER (para que sea una versión más "normalizada" de lo que sería un modelo ER si fuese SQL)
-- Modificaciones 26/octubre
-  - Modificado el diagrama de clases para eliminar el campo foto del usuario. Ya que para hacerlo necesito usar Firebase Storage que es de pago. Y para añadir la relacion de trailer con el contenido.
-  - Modificado el modelo ER para eliminar también aquí el campo de foto del usuario. Y añadido a la entidad grupo, los miembros.
