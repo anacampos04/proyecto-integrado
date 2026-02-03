@@ -46,9 +46,13 @@ captures/
 # OS
 .DS_Store
 
-# Keystore (si aplica, mejor fuera del repo)
+# Keystore
 *.jks
 *.keystore
 
+#local
 local.properties
 /local.properties
+
+#vscode
+.vscode/
