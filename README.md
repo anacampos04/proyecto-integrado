@@ -33,10 +33,41 @@ Permitir que los usuarios se registren y tengan amigos con los que hacer rondas 
 - **Jetpack Compose**  
 - **Firebase Firestore**  
 - **Firebase Auth**  
-- **Room** (opcional)  
 - **MVVM** con ViewModel y StateFlow  
 - **API externa de películas**  
 - **Material 3**  
+
+---
+
+## 🚀 Como ejecutar el proyecto
+
+### Requisitos previos
+- Android Studio (recomendado Koala o superior)
+- JDK 17
+- Cuenta de Firebase
+
+### Pasos
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/anacampos04/proyecto-integrado.git
+   
+2. Abre el proyecto en **Android Studio**.
+
+3. Configura Firebase:
+   - Crea un proyecto en Firebase.
+   - Añade una app Android con el mismo `applicationId` del proyecto.
+   - Descarga el archivo `google-services.json`.
+   - Colócalo dentro de la carpeta `app/`.
+
+4. Asegúrate de tener habilitados en Firebase:
+   - Authentication
+   - Firestore Database
+
+5. Ejecuta el proyecto en un emulador o dispositivo físico Android.
+
+### Notas
+- El archivo `google-services.json` no está incluido en el repositorio por motivos de seguridad.
+- El proyecto forma parte del Proyecto Integrado del ciclo de Desarrollo de Aplicaciones Multiplataforma (DAM).
 
 ---
 
