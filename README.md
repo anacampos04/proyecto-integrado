@@ -9,7 +9,8 @@
 
 ## 📑 Índice
 - [💡 Idea de la aplicación](#-idea-de-la-aplicación)  
-- [🛠 Tecnologías empleadas](#-tecnologías-empleadas)  
+- [🛠 Tecnologías empleadas](#-tecnologías-empleadas)
+- [🚀 Como ejecutar el proyecto](#-como-ejecutar-el-proyecto)
 - [✅ Check list de tareas](#-check-list-de-tareas)  
   - [📅 Quincena 1 (9 - 13 octubre)](#-quincena-1-9---13-octubre)  
   - [📅 Quincena 2 (14 - 27 octubre)](#-quincena-2-14---27-octubre)  
