@@ -49,3 +49,6 @@ captures/
 # Keystore (si aplica, mejor fuera del repo)
 *.jks
 *.keystore
+
+local.properties
+/local.properties
